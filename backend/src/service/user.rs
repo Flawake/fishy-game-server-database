@@ -7,12 +7,8 @@ use uuid::Uuid;
 // Here you add your business logic here.
 #[async_trait]
 pub trait UserService: Send + Sync {
-    /// Creates a new user
-    /// Hashes the password of the users and store the user
     async fn create(&self, user: User) -> Result<(), sqlx::Error>;
 
-    /// Recieves a user given a user_id.
-    /// Returns none if no user was found given the uuid.
     async fn from_uuid(&self, user_id: Uuid) -> Result<Option<User>, sqlx::Error>;
 }
 
