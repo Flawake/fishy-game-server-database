@@ -31,7 +31,7 @@ struct CreateUserRequest {
         (status = 400, description = "Invalid input data"),
         (status = 500, description = "Internal server error")
     ),
-    description = "Creates a user. The email should be unique.",
+    description = "Creates a user. The email and username should be unique.",
     operation_id = "createUser",
     tag = "Users"
 )]

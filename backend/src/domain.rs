@@ -1,5 +1,5 @@
 use serde::Deserialize;
-use chrono::NaiveDate;
+use chrono::{DateTime, Utc};
 use serde::Serialize;
 use sqlx::FromRow;
 use uuid::Uuid;
@@ -11,5 +11,5 @@ pub struct User {
     pub email: String,
     pub password: String,
     pub salt: String,
-    pub created: NaiveDate,
+    pub created: DateTime<Utc>,
 }

@@ -1,15 +1,10 @@
 CREATE TABLE users (
     user_id UUID PRIMARY KEY,
-    name TEXT NOT NULL,
-    email TEXT NOT NULL,
+    name TEXT UNIQUE NOT NULL,
+    email TEXT UNIQUE NOT NULL,
     password TEXT NOT NULL,
     salt TEXT NOT NULL,
-    created DATE NOT NULL
-);
-
-CREATE TABLE bait_types (
-    id UUID PRIMARY KEY,
-    name TEXT NOT NULL
+    created TIMESTAMPTZ NOT NULL
 );
 
 CREATE TABLE fish_caught (
