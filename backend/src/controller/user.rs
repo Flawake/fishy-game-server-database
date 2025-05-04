@@ -41,16 +41,11 @@ async fn create_user(
     payload: Json<CreateUserRequest>,
     user_service: &State<Arc<dyn UserService>>,
 ) -> Json<bool> {
-    // Convert `CreateUserRequest` to `User`
-    let user = User {
-        user_id: Uuid::new_v4(), // Generate a new UUID for the user
-        name: payload.name.clone(),
-        email: payload.email.clone(),
-        password: payload.password.clone(),
-    };
-
-    // Call the `create` method and await its result
-    match user_service.create(user).await {
+    match user_service.create(
+        payload.name.clone(),
+        payload.email.clone(),
+        payload.password.clone(),
+    ).await {
         Ok(()) => Json(true),
         Err(_) => Json(false),
     }

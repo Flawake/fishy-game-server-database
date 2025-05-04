@@ -20,23 +20,22 @@ pub struct UserRepositoryImpl {
 }
 
 impl UserRepositoryImpl {
-    // A simpel new function for the user Repository
     pub fn new(pool: PgPool) -> Self {
         Self { pool }
     }
 }
 
-// Implement the UserRepository trait for UserRepositoryImpl.
 #[async_trait]
 impl UserRepository for UserRepositoryImpl {
     async fn create(&self, user: User) -> Result<(), sqlx::Error> {
         sqlx::query!(
-            "INSERT INTO users (user_id, name, email, password)
-             VALUES ($1, $2, $3, $4)",
+            "INSERT INTO users (user_id, name, email, password, salt)
+             VALUES ($1, $2, $3, $4, $5)",
             user.user_id,
             user.name,
             user.email,
             user.password,
+            user.salt
         )
         .execute(&self.pool)
         .await?;
@@ -46,7 +45,7 @@ impl UserRepository for UserRepositoryImpl {
     async fn from_uuid(&self, user_id: Uuid) -> Result<Option<User>, sqlx::Error> {
         let user = sqlx::query_as!(
             User,
-            "SELECT user_id, name, email, password
+            "SELECT user_id, name, email, password, salt
              FROM users
              WHERE user_id = $1",
             user_id
@@ -57,19 +56,15 @@ impl UserRepository for UserRepositoryImpl {
     }
 
     async fn from_email(&self, email: String) -> Result<Option<User>, sqlx::Error> {
-        // Query the database for a user by email
-        let query_result = sqlx::query_as!(
+        let user = sqlx::query_as!(
             User,
-            r#"
-            SELECT user_id, name, email, password
-            FROM users
-            WHERE email = $1
-            "#,
+            "SELECT user_id, name, email, password, salt
+             FROM users
+             WHERE email = $1",
             email
         )
-        .fetch_optional(&self.pool) // Use `fetch_optional` to get an Option<User>
+        .fetch_optional(&self.pool)
         .await?;
-
-        Ok(query_result)
+        Ok(user)
     }
 }

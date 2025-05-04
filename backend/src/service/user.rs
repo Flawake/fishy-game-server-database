@@ -7,7 +7,11 @@ use uuid::Uuid;
 // Here you add your business logic here.
 #[async_trait]
 pub trait UserService: Send + Sync {
-    async fn create(&self, user: User) -> Result<(), sqlx::Error>;
+    async fn create(&self,
+        name: String,
+        email: String,
+        password: String,
+    ) -> Result<(), sqlx::Error>;
 
     async fn from_uuid(&self, user_id: Uuid) -> Result<Option<User>, sqlx::Error>;
 }
@@ -26,11 +30,19 @@ impl<R: UserRepository> UserServiceImpl<R> {
 // Implement UserService trait for UserServiceImpl.
 #[async_trait]
 impl<R: UserRepository> UserService for UserServiceImpl<R> {
-    async fn create(&self, user: User) -> Result<(), sqlx::Error> {
-        let mut user = user;
-        // hash the password.
-        user.password = hash_password(&user.password);
-        // And let the user repository store the user.
+   async fn create(&self,
+        name: String,
+        email: String,
+        password: String,
+    ) -> Result<(), sqlx::Error> {
+        let user = User {
+            user_id: Uuid::new_v4(),
+            salt: Uuid::new_v4().to_string(),
+            name: name,
+            email: email,
+            password: hash_password(&password),
+        };
+
         self.user_repository.create(user).await
     }
 
