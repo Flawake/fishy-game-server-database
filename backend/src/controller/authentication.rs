@@ -1,6 +1,6 @@
 use crate::service::authentication::AuthenticationService;
-use rocket::post;
 use rocket::http::Status;
+use rocket::post;
 use rocket::response::status;
 use rocket::routes;
 use rocket::serde::json::Json;
