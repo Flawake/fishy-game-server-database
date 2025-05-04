@@ -36,13 +36,14 @@ impl<R: UserRepository> UserService for UserServiceImpl<R> {
         email: String,
         password: String,
     ) -> Result<(), sqlx::Error> {
+        let salt = Uuid::new_v4().to_string();
         let user = User {
             user_id: Uuid::new_v4(),
-            salt: Uuid::new_v4().to_string(),
-            name: name,
-            email: email,
-            password: hash_password(&password),
-            created: Utc::now().date_naive(),
+            salt: salt.clone(),
+            name,
+            email,
+            password: hash_password(&password, &salt),
+            created: Utc::now(),
         };
 
         self.user_repository.create(user).await
@@ -54,8 +55,8 @@ impl<R: UserRepository> UserService for UserServiceImpl<R> {
     }
 }
 
-/// Hashes a password with bcrypt.
-pub fn hash_password(password: &str) -> String {
+/// Hashes a password with bcrypt together with a salt.
+pub fn hash_password(password: &str, salt: &str) -> String {
     // Generate a hashed password
-    hash(password, bcrypt::DEFAULT_COST).expect("Failed to hash password")
+    hash(format!("{}{}", password, salt), bcrypt::DEFAULT_COST).expect("Failed to hash password")
 }

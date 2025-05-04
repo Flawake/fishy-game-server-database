@@ -31,7 +31,7 @@
       {
         "ordinal": 5,
         "name": "created",
-        "type_info": "Date"
+        "type_info": "Timestamptz"
       }
     ],
     "parameters": {
