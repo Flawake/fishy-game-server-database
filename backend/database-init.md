@@ -16,6 +16,7 @@ CREATE TABLE fish_caught (
     user_id UUID NOT NULL REFERENCES users(user_id),
     fish_id UUID NOT NULL,
     max_length INTEGER NOT NULL,
+    first_caught DATE NOT NULL,
     amount INTEGER NOT NULL,
     PRIMARY KEY (user_id, fish_id)
 );
