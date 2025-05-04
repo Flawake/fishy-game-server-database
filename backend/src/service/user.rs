@@ -1,14 +1,15 @@
 use crate::domain::User;
-use chrono::Utc;
 use crate::repository::user::*;
 use bcrypt::hash;
+use chrono::Utc;
 use rocket::async_trait;
 use uuid::Uuid;
 
 // Here you add your business logic here.
 #[async_trait]
 pub trait UserService: Send + Sync {
-    async fn create(&self,
+    async fn create(
+        &self,
         name: String,
         email: String,
         password: String,
@@ -31,7 +32,8 @@ impl<R: UserRepository> UserServiceImpl<R> {
 // Implement UserService trait for UserServiceImpl.
 #[async_trait]
 impl<R: UserRepository> UserService for UserServiceImpl<R> {
-   async fn create(&self,
+    async fn create(
+        &self,
         name: String,
         email: String,
         password: String,

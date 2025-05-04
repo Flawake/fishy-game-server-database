@@ -24,7 +24,7 @@ struct CreateUserRequest {
 // Make sure to add your endpoint in docs.rs when you write new endpoints.
 #[utoipa::path(
     post,
-    path = "/users",
+    path = "/account/register",
     request_body = CreateUserRequest,
     responses(
         (status = 201, description = "User created successfully", body = bool),
@@ -40,11 +40,14 @@ async fn create_user(
     payload: Json<CreateUserRequest>,
     user_service: &State<Arc<dyn UserService>>,
 ) -> Json<bool> {
-    match user_service.create(
-        payload.name.clone(),
-        payload.email.clone(),
-        payload.password.clone(),
-    ).await {
+    match user_service
+        .create(
+            payload.name.clone(),
+            payload.email.clone(),
+            payload.password.clone(),
+        )
+        .await
+    {
         Ok(()) => Json(true),
         Err(_) => Json(false),
     }
@@ -73,9 +76,7 @@ struct GetUserResponse {
     )
 )]
 #[get("/")]
-async fn get_user(
-    user: User,
-) -> Result<Json<GetUserResponse>, status::Custom<String>> {
+async fn get_user(user: User) -> Result<Json<GetUserResponse>, status::Custom<String>> {
     Ok(Json(GetUserResponse {
         email: user.email,
         name: user.name,

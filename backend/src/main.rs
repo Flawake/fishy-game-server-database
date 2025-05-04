@@ -1,9 +1,11 @@
 use crate::controller::authentication::authentication_routes;
+use crate::controller::stats::stats_routes;
 use crate::domain::User;
 use crate::service::authentication::*;
 use crate::service::user::UserService;
 use crate::AuthenticationService;
 use dotenv::dotenv;
+use repository::stats::StatsRepositoryImpl;
 use rocket::http::Status;
 use rocket::request;
 use rocket::request::FromRequest;
@@ -13,6 +15,8 @@ use rocket::Request;
 use rocket::State;
 use rocket_cors::AllowedOrigins;
 use rocket_cors::{AllowedHeaders, CorsOptions};
+use service::stats::StatsService;
+use service::stats::StatsServiceImpl;
 use std::env;
 use std::sync::Arc;
 use utoipa::OpenApi;
@@ -98,11 +102,17 @@ async fn main() -> Result<(), rocket::Error> {
 
     // Build the repository layers and service layers.
     let user_repository = UserRepositoryImpl::new(pool.clone());
+    let stats_repository = StatsRepositoryImpl::new(pool.clone());
+
     let user_service: Arc<dyn UserService> =
         Arc::new(UserServiceImpl::new(user_repository.clone()));
 
     let authentication_service: Arc<dyn AuthenticationService> = Arc::new(
         AuthenticationServiceImpl::new(user_repository.clone(), secret_key),
+    );
+
+    let stats_service: Arc<dyn StatsService> = Arc::new(
+        StatsServiceImpl::new(stats_repository.clone()),
     );
 
     // Add here more repositories and services when your backend grows.
@@ -120,6 +130,7 @@ async fn main() -> Result<(), rocket::Error> {
         // Add more service layers when you backend grows.
         .manage(user_service)
         .manage(authentication_service)
+        .manage(stats_service)
         // expose swagger ui.
         // Go to http://localhost:8000/docs to view your endpoint documentation.
         .mount(
@@ -127,8 +138,9 @@ async fn main() -> Result<(), rocket::Error> {
             SwaggerUi::new("/docs/<_..>").url("/api-docs/openapi.json", ApiDoc::openapi()),
         )
         // Mount all your routes here.
-        .mount("/users", user_routes())
+        .mount("/account/register", user_routes())
         .mount("/login", authentication_routes())
+        .mount("/stats", stats_routes())
         .attach(cors)
         .launch()
         .await?;
