@@ -54,7 +54,7 @@ impl<U: UserRepository> AuthenticationService for AuthenticationServiceImpl<U> {
                 return Ok(None);
             }
         };
-        match verify_password(&password, &user.password) {
+        match verify_password(&password, &user.salt, &user.password) {
             true => Ok(generate_jwt(user.user_id, self.secret_key.clone())?),
             false => Ok(None),
         }
@@ -101,7 +101,8 @@ fn generate_jwt(user_id: Uuid, secret_key: String) -> Result<Option<String>, sql
     Ok(Some(token))
 }
 
-pub fn verify_password(password: &str, hashed_password: &str) -> bool {
+pub fn verify_password(password: &str, salt: &str, hashed_password: &str) -> bool {
     // Verify the password against the hashed password
-    verify(password, hashed_password).unwrap_or(false)
+    let s = format!("{}{}", password, salt);
+    verify(s, hashed_password).unwrap_or(false)
 }
