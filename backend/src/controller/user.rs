@@ -10,7 +10,6 @@ use serde::Deserialize;
 use serde::Serialize;
 use std::sync::Arc;
 use utoipa::ToSchema;
-use uuid::Uuid;
 
 /// Request body for creating a user.
 #[derive(Debug, Serialize, Deserialize, ToSchema)]
