@@ -68,13 +68,22 @@ CREATE TABLE inventory (
     PRIMARY KEY (user_id, item_id)
 );
 
+CREATE TABLE mailbox (
+    user_id UUID NOT NULL,
+    mail_id UUID NOT NULL,
+    read BOOLEAN NOT NULL DEFAULT FALSE,
+    is_archived BOOLEAN NOT NULL DEFAULT FALSE,
+    PRIMARY KEY (user_id, mail_id),
+    FOREIGN KEY (user_id) REFERENCES users(id),
+    FOREIGN KEY (mail_id) REFERENCES mails(id)
+);
+
 CREATE TABLE mail (
+    mail_id: UUID PRIMARY KEY,
     sender_id UUID NOT NULL REFERENCES users(user_id),
-    receiver_id UUID NOT NULL REFERENCES users(user_id),
     title TEXT NOT NULL,
     message TEXT NOT NULL,
     send_time DATE NOT NULL,
-    read_time DATE
 );
 
 CREATE TABLE users (
@@ -82,6 +91,6 @@ CREATE TABLE users (
     name TEXT NOT NULL,
     email TEXT NOT NULL,
     password TEXT NOT NULL,
-    sault TEXT NOT NULL,
+    salt TEXT NOT NULL,
     created DATE NOT NULL
 );
