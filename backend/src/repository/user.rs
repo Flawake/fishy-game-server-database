@@ -28,24 +28,30 @@ impl UserRepositoryImpl {
 #[async_trait]
 impl UserRepository for UserRepositoryImpl {
     async fn create(&self, user: User) -> Result<(), sqlx::Error> {
-        sqlx::query!(
-            "INSERT INTO users (user_id, name, email, password, salt)
-             VALUES ($1, $2, $3, $4, $5)",
+        match sqlx::query!(
+            "INSERT INTO users (user_id, name, email, password, salt, created)
+             VALUES ($1, $2, $3, $4, $5, $6)",
             user.user_id,
             user.name,
             user.email,
             user.password,
-            user.salt
+            user.salt,
+            user.created
         )
         .execute(&self.pool)
-        .await?;
-        Ok(())
+        .await {
+        Ok(_) => Ok(()),
+        Err(e) => {
+            dbg!(&e);
+            Err(e)
+        },
+    }
     }
 
     async fn from_uuid(&self, user_id: Uuid) -> Result<Option<User>, sqlx::Error> {
         let user = sqlx::query_as!(
             User,
-            "SELECT user_id, name, email, password, salt
+            "SELECT user_id, name, email, password, salt, created
              FROM users
              WHERE user_id = $1",
             user_id
@@ -58,7 +64,7 @@ impl UserRepository for UserRepositoryImpl {
     async fn from_email(&self, email: String) -> Result<Option<User>, sqlx::Error> {
         let user = sqlx::query_as!(
             User,
-            "SELECT user_id, name, email, password, salt
+            "SELECT user_id, name, email, password, salt, created
              FROM users
              WHERE email = $1",
             email

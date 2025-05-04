@@ -1,6 +1,6 @@
 {
   "db_name": "PostgreSQL",
-  "query": "SELECT user_id, name, email, password, salt\n             FROM users\n             WHERE email = $1",
+  "query": "SELECT user_id, name, email, password, salt, created\n             FROM users\n             WHERE email = $1",
   "describe": {
     "columns": [
       {
@@ -27,6 +27,11 @@
         "ordinal": 4,
         "name": "salt",
         "type_info": "Text"
+      },
+      {
+        "ordinal": 5,
+        "name": "created",
+        "type_info": "Date"
       }
     ],
     "parameters": {
@@ -39,8 +44,9 @@
       false,
       false,
       false,
+      false,
       false
     ]
   },
-  "hash": "ddfd77cc3e8ea9679dfd826d60a7a3bfbe4ce7aabb14894e4018873053bf8de0"
+  "hash": "1c56f9d7a84d628b4e14fb43ec3261ccf14abd677cb602dc4fca595c25b2f2f1"
 }
