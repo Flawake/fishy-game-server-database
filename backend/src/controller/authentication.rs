@@ -1,5 +1,5 @@
 use crate::service::authentication::AuthenticationService;
-use rocket::get;
+use rocket::post;
 use rocket::http::Status;
 use rocket::response::status;
 use rocket::routes;
@@ -26,7 +26,7 @@ struct LoginRequest {
 
 // Return type should later be CreateUserRepsonse
 #[utoipa::path(
-    get,
+    post,
     path = "/login",
     request_body = LoginRequest,
     responses(
@@ -38,7 +38,7 @@ struct LoginRequest {
     operation_id = "Login",
     tag = "Authentication"
 )]
-#[get("/", data = "<payload>")]
+#[post("/", data = "<payload>")]
 async fn login(
     payload: Json<LoginRequest>,
     authentication_service: &State<Arc<dyn AuthenticationService>>,
