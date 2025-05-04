@@ -66,7 +66,7 @@ struct GetUserResponse {
         (status = 500, description = "Internal server error")
     ),
     description = "Recieve user details.",
-    operation_id = "createUser",
+    operation_id = "getUser",
     tag = "Users",
     security(
         ("jwt_auth" = [])
@@ -74,8 +74,6 @@ struct GetUserResponse {
 )]
 #[get("/")]
 async fn get_user(
-    // user is recieved by decoding the JWT.
-    // when a User is required as argument for an endpoiint, is automatically protected with JWT.
     user: User,
 ) -> Result<Json<GetUserResponse>, status::Custom<String>> {
     Ok(Json(GetUserResponse {

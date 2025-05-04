@@ -1,4 +1,5 @@
 use crate::domain::User;
+use chrono::Utc;
 use crate::repository::user::*;
 use bcrypt::hash;
 use rocket::async_trait;
@@ -41,6 +42,7 @@ impl<R: UserRepository> UserService for UserServiceImpl<R> {
             name: name,
             email: email,
             password: hash_password(&password),
+            created: Utc::now().date_naive(),
         };
 
         self.user_repository.create(user).await
