@@ -1,0 +1,16 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "UPDATE mailbox SET archived = $3 WHERE user_id = $1 AND mail_id = $2",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Uuid",
+        "Uuid",
+        "Bool"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "29286a8338ed5d3944a6a3f3579bc245fafbcd11727c1b7b48d53561bc4d5dfa"
+}

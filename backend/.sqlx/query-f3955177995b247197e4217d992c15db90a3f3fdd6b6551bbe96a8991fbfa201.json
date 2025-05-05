@@ -1,0 +1,14 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "DELETE FROM mail\n                WHERE mail_id = $1\n                    AND NOT EXISTS (\n                        SELECT 1 FROM mailbox WHERE mail_id = $1\n                    );",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Uuid"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "f3955177995b247197e4217d992c15db90a3f3fdd6b6551bbe96a8991fbfa201"
+}

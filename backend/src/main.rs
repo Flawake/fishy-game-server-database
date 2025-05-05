@@ -4,7 +4,9 @@ use crate::domain::User;
 use crate::service::authentication::*;
 use crate::service::user::UserService;
 use crate::AuthenticationService;
+use controller::mail::mail_routes;
 use dotenv::dotenv;
+use repository::mail::MailRepositoryImpl;
 use repository::stats::StatsRepositoryImpl;
 use rocket::http::Status;
 use rocket::request;
@@ -15,6 +17,8 @@ use rocket::Request;
 use rocket::State;
 use rocket_cors::AllowedOrigins;
 use rocket_cors::{AllowedHeaders, CorsOptions};
+use service::mail::MailService;
+use service::mail::MailServiceImpl;
 use service::stats::StatsService;
 use service::stats::StatsServiceImpl;
 use std::env;
@@ -103,6 +107,7 @@ async fn main() -> Result<(), rocket::Error> {
     // Build the repository layers and service layers.
     let user_repository = UserRepositoryImpl::new(pool.clone());
     let stats_repository = StatsRepositoryImpl::new(pool.clone());
+    let mail_repository = MailRepositoryImpl::new(pool.clone());
 
     let user_service: Arc<dyn UserService> =
         Arc::new(UserServiceImpl::new(user_repository.clone()));
@@ -113,6 +118,10 @@ async fn main() -> Result<(), rocket::Error> {
 
     let stats_service: Arc<dyn StatsService> =
         Arc::new(StatsServiceImpl::new(stats_repository.clone()));
+
+    let mail_service: Arc<dyn MailService> = Arc::new(
+        MailServiceImpl::new(mail_repository.clone())
+    );
 
     // Add here more repositories and services when your backend grows.
 
@@ -130,6 +139,7 @@ async fn main() -> Result<(), rocket::Error> {
         .manage(user_service)
         .manage(authentication_service)
         .manage(stats_service)
+        .manage(mail_service)
         // expose swagger ui.
         // Go to http://localhost:8000/docs to view your endpoint documentation.
         .mount(
@@ -140,6 +150,7 @@ async fn main() -> Result<(), rocket::Error> {
         .mount("/account/register", user_routes())
         .mount("/login", authentication_routes())
         .mount("/stats", stats_routes())
+        .mount("/mail", mail_routes())
         .attach(cors)
         .launch()
         .await?;
