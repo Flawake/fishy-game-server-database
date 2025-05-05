@@ -1,0 +1,15 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "DELETE FROM mailbox\n            WHERE user_id = $1 AND mail_id = $2;",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Uuid",
+        "Uuid"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "49da921519cbe6edea05433b33d2b7ad21c7725be63ec0d24ed1280169c51337"
+}
