@@ -1,0 +1,16 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "INSERT INTO fish_caught_bait (user_id, fish_id, bait_id)\n            VALUES ($1, $2, $3)\n            ON CONFLICT DO NOTHING;\n            ",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Uuid",
+        "Int4",
+        "Int4"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "4ef6b8f9c22318b80b32caf57ce8f34fae7f82878e5ec38905ef88baa413e236"
+}

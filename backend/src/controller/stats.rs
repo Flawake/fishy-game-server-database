@@ -1,7 +1,7 @@
-use crate::service::stats::StatsService;
-use std::sync::Arc;
+use crate::{domain::StatFish, service::stats::StatsService};
 use rocket::{post, routes, serde::json::Json, State};
 use serde::{Deserialize, Serialize};
+use std::sync::Arc;
 use utoipa::ToSchema;
 use uuid::Uuid;
 
@@ -33,6 +33,16 @@ struct AddPlayTimeRequest {
     pub amount: i32,
 }
 
+/// Request body for adding playtime of a player
+#[derive(Debug, Serialize, Deserialize, ToSchema)]
+struct AddFishRequest {
+    pub user_id: Uuid,
+    pub length: i32,
+    pub fish_id: i32,
+    pub bait_id: i32,
+    pub area_id: i32,
+}
+
 #[utoipa::path(
     post,
     path = "/stats/add_xp",
@@ -54,13 +64,7 @@ async fn add_xp(
     if payload.amount < 0 {
         return Json(false);
     }
-    match stats_service
-        .add_xp(
-            payload.user_id,
-            payload.amount,
-        )
-        .await
-    {
+    match stats_service.add_xp(payload.user_id, payload.amount).await {
         Ok(()) => Json(true),
         Err(_) => Json(false),
     }
@@ -85,10 +89,7 @@ async fn change_bucks(
     stats_service: &State<Arc<dyn StatsService>>,
 ) -> Json<bool> {
     match stats_service
-        .change_bucks(
-            payload.user_id,
-            payload.amount,
-        )
+        .change_bucks(payload.user_id, payload.amount)
         .await
     {
         Ok(()) => Json(true),
@@ -115,10 +116,7 @@ async fn change_coins(
     stats_service: &State<Arc<dyn StatsService>>,
 ) -> Json<bool> {
     match stats_service
-        .change_coins(
-            payload.user_id,
-            payload.amount,
-        )
+        .change_coins(payload.user_id, payload.amount)
         .await
     {
         Ok(()) => Json(true),
@@ -148,10 +146,40 @@ async fn add_playtime(
         return Json(false);
     }
     match stats_service
-        .add_playtime(
-            payload.user_id,
-            payload.amount,
-        )
+        .add_playtime(payload.user_id, payload.amount)
+        .await
+    {
+        Ok(()) => Json(true),
+        Err(_) => Json(false),
+    }
+}
+
+#[utoipa::path(
+    post,
+    path = "/stats/add_fish",
+    request_body = AddFishRequest,
+    responses(
+        (status = 201, description = "stat fish added successfully", body = bool),
+        (status = 400, description = "Invalid input data"),
+        (status = 500, description = "Internal server error")
+    ),
+    description = "Adds a stat fish to a given user account",
+    operation_id = "changePlayetime",
+    tag = "Stats"
+)]
+#[post("/add_fish", data = "<payload>")]
+async fn add_fish(
+    payload: Json<AddFishRequest>,
+    stats_service: &State<Arc<dyn StatsService>>,
+) -> Json<bool> {
+    match stats_service
+        .add_fish(StatFish {
+            user_id: payload.user_id,
+            fish_id: payload.fish_id,
+            length: payload.length,
+            bait_id: payload.bait_id,
+            area_id: payload.area_id,
+        })
         .await
     {
         Ok(()) => Json(true),
@@ -161,5 +189,5 @@ async fn add_playtime(
 
 // Combine all the user routes.
 pub fn stats_routes() -> Vec<rocket::Route> {
-    routes![add_xp, change_bucks, change_coins, add_playtime]
+    routes![add_xp, change_bucks, change_coins, add_playtime, add_fish]
 }

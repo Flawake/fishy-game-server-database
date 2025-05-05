@@ -1,3 +1,4 @@
 .direnv
 backend/target
 result
+backend/.env
