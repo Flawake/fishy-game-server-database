@@ -1,0 +1,16 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n            INSERT INTO fish_caught (user_id, fish_id, amount, max_length, first_caught)\n            VALUES ($1, $2, 1, $3, CURRENT_DATE)\n            ON CONFLICT (user_id, fish_id)\n            DO UPDATE SET\n                amount = fish_caught.amount + 1,\n                max_length = GREATEST(fish_caught.max_length, EXCLUDED.max_length);\n            ",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Uuid",
+        "Int4",
+        "Int4"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "72936829ad7d67390e3db2d20d6c9d7ab3ba3f369afc7887ea3e188c68e7cadd"
+}

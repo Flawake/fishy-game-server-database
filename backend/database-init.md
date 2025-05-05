@@ -7,26 +7,42 @@ CREATE TABLE users (
     created TIMESTAMPTZ NOT NULL
 );
 
+CREATE TABLE stats (
+    user_id UUID PRIMARY KEY REFERENCES users(user_id),
+    xp INTEGER NOT NULL,
+    coins INTEGER NOT NULL,
+    bucks INTEGER NOT NULL,
+    total_playtime INTEGER NOT NULL
+);
+
 CREATE TABLE fish_caught (
-    user_id UUID NOT NULL REFERENCES users(user_id),
-    fish_id UUID NOT NULL,
+    user_id UUID NOT NULL REFERENCES stats(user_id),
+    fish_id INT NOT NULL,
+    amount INT NOT NULL,
     max_length INTEGER NOT NULL,
     first_caught DATE NOT NULL,
-    amount INTEGER NOT NULL,
     PRIMARY KEY (user_id, fish_id)
 );
 
-CREATE TABLE first_fish_caught (
-    user_id UUID NOT NULL REFERENCES users(user_id),
-    fish_id UUID NOT NULL,
-    place_id UUID NOT NULL,
-    bait_id UUID NOT NULL,
-    PRIMARY KEY (user_id, fish_id, place_id)
+CREATE TABLE fish_caught_area (
+    user_id UUID NOT null,
+    fish_id INTEGER NOT NULL,
+    area_id INTEGER NOT NULL,
+    PRIMARY KEY (user_id, fish_id, area_id) ,
+    FOREIGN KEY (user_id, fish_id) REFERENCES fish_caught(user_id, fish_id)
+);
+
+CREATE TABLE fish_caught_bait (
+    user_id UUID NOT null,
+    fish_id INTEGER NOT NULL,
+    bait_id INTEGER NOT NULL,
+    PRIMARY KEY (user_id, fish_id, bait_id),
+    FOREIGN KEY (user_id, fish_id) REFERENCES fish_caught(user_id, fish_id)
 );
 
 CREATE TABLE inventory (
     user_id UUID NOT NULL REFERENCES users(user_id),
-    item_id UUID NOT NULL,
+    item_id INTEGER NOT NULL,
     amount INTEGER NOT NULL,
     cell_id INTEGER NOT NULL,
     PRIMARY KEY (user_id, item_id)
@@ -49,4 +65,3 @@ CREATE TABLE mailbox (
     FOREIGN KEY (user_id) REFERENCES users(user_id),
     FOREIGN KEY (mail_id) REFERENCES mail(mail_id)
 );
-

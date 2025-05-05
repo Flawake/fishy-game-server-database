@@ -111,9 +111,8 @@ async fn main() -> Result<(), rocket::Error> {
         AuthenticationServiceImpl::new(user_repository.clone(), secret_key),
     );
 
-    let stats_service: Arc<dyn StatsService> = Arc::new(
-        StatsServiceImpl::new(stats_repository.clone()),
-    );
+    let stats_service: Arc<dyn StatsService> =
+        Arc::new(StatsServiceImpl::new(stats_repository.clone()));
 
     // Add here more repositories and services when your backend grows.
 
