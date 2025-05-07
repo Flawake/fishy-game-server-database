@@ -1,4 +1,5 @@
 use crate::controller::authentication::*;
+use crate::controller::inventory::*;
 use crate::controller::mail::*;
 use crate::controller::stats::*;
 use crate::controller::user::*;
@@ -19,6 +20,11 @@ use utoipa::OpenApi;
     create_mail,
     delete_mail,
     change_read_state,
-    change_archive_state
+    change_archive_state,
+
+    add_item,
+    increase_item,
+    destroy_item,
+    degrade_item
 ))]
 pub struct ApiDoc;
