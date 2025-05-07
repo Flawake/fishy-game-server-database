@@ -4,8 +4,10 @@ use crate::domain::User;
 use crate::service::authentication::*;
 use crate::service::user::UserService;
 use crate::AuthenticationService;
+use controller::inventory::inventory_routes;
 use controller::mail::mail_routes;
 use dotenv::dotenv;
+use repository::inventory::InventoryRepositoryImpl;
 use repository::mail::MailRepositoryImpl;
 use repository::stats::StatsRepositoryImpl;
 use rocket::http::Status;
@@ -17,6 +19,8 @@ use rocket::Request;
 use rocket::State;
 use rocket_cors::AllowedOrigins;
 use rocket_cors::{AllowedHeaders, CorsOptions};
+use service::inventory::InventoryService;
+use service::inventory::InventoryServiceImpl;
 use service::mail::MailService;
 use service::mail::MailServiceImpl;
 use service::stats::StatsService;
@@ -108,6 +112,7 @@ async fn main() -> Result<(), rocket::Error> {
     let user_repository = UserRepositoryImpl::new(pool.clone());
     let stats_repository = StatsRepositoryImpl::new(pool.clone());
     let mail_repository = MailRepositoryImpl::new(pool.clone());
+    let inventory_repository = InventoryRepositoryImpl::new(pool.clone());
 
     let user_service: Arc<dyn UserService> =
         Arc::new(UserServiceImpl::new(user_repository.clone()));
@@ -121,6 +126,10 @@ async fn main() -> Result<(), rocket::Error> {
 
     let mail_service: Arc<dyn MailService> = Arc::new(
         MailServiceImpl::new(mail_repository.clone())
+    );
+
+    let inventory_service: Arc<dyn InventoryService> = Arc::new(
+        InventoryServiceImpl::new(inventory_repository.clone())
     );
 
     // Add here more repositories and services when your backend grows.
@@ -140,6 +149,7 @@ async fn main() -> Result<(), rocket::Error> {
         .manage(authentication_service)
         .manage(stats_service)
         .manage(mail_service)
+        .manage(inventory_service)
         // expose swagger ui.
         // Go to http://localhost:8000/docs to view your endpoint documentation.
         .mount(
@@ -151,6 +161,7 @@ async fn main() -> Result<(), rocket::Error> {
         .mount("/login", authentication_routes())
         .mount("/stats", stats_routes())
         .mount("/mail", mail_routes())
+        .mount("/inventory", inventory_routes())
         .attach(cors)
         .launch()
         .await?;
