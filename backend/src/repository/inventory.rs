@@ -59,7 +59,7 @@ impl InventoryRepository for InventoryRepositoryImpl {
         cell_id: i32,
     ) -> Result<(), sqlx::Error> {
         match sqlx::query!(
-            "INSERT INTO inventory (user_id, item_id, item_uid, amount, cell_id)
+            "INSERT INTO inventory_item (user_id, item_id, item_uid, amount, cell_id)
             VALUES ($1, $2, $3, $4, $5)",
             user_id,
             item_id,
@@ -85,7 +85,7 @@ impl InventoryRepository for InventoryRepositoryImpl {
         amount: i32,
     ) -> Result<(), sqlx::Error> {
         match sqlx::query!(
-            "UPDATE inventory
+            "UPDATE inventory_item
             SET amount = amount + $1
             WHERE user_id = $2 AND item_id = $3 AND item_uid IS NOT DISTINCT FROM $4",
             amount,
@@ -111,7 +111,7 @@ impl InventoryRepository for InventoryRepositoryImpl {
         item_uid: Option<Uuid>,
     ) -> Result<(), sqlx::Error> {
         let result = match sqlx::query!(
-            "DELETE FROM inventory WHERE
+            "DELETE FROM inventory_item WHERE
             user_id = $1 AND item_id = $2 AND item_uid IS NOT DISTINCT FROM $3",
             user_id,
             item_id,
@@ -141,7 +141,7 @@ impl InventoryRepository for InventoryRepositoryImpl {
         amount: i32,
     ) -> Result<(), sqlx::Error> {
         match sqlx::query!(
-            "UPDATE inventory
+            "UPDATE inventory_item
             SET amount = amount - $1
             WHERE user_id = $2 AND item_id = $3 AND item_uid IS NOT DISTINCT FROM $4",
             amount,
