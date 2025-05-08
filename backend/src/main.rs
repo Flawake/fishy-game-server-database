@@ -4,9 +4,11 @@ use crate::domain::User;
 use crate::service::authentication::*;
 use crate::service::user::UserService;
 use crate::AuthenticationService;
+use controller::data::data_routes;
 use controller::inventory::inventory_routes;
 use controller::mail::mail_routes;
 use dotenv::dotenv;
+use repository::data::DataRepositoryImpl;
 use repository::inventory::InventoryRepositoryImpl;
 use repository::mail::MailRepositoryImpl;
 use repository::stats::StatsRepositoryImpl;
@@ -19,6 +21,8 @@ use rocket::Request;
 use rocket::State;
 use rocket_cors::AllowedOrigins;
 use rocket_cors::{AllowedHeaders, CorsOptions};
+use service::data::DataService;
+use service::data::DataServiceImpl;
 use service::inventory::InventoryService;
 use service::inventory::InventoryServiceImpl;
 use service::mail::MailService;
@@ -27,14 +31,15 @@ use service::stats::StatsService;
 use service::stats::StatsServiceImpl;
 use std::env;
 use std::sync::Arc;
+use sqlx::PgPool;
 use utoipa::OpenApi;
 use utoipa_swagger_ui::SwaggerUi;
-extern crate rocket;
 use crate::controller::user::*;
 use crate::docs::ApiDoc;
 use crate::repository::user::UserRepositoryImpl;
 use crate::service::user::UserServiceImpl;
-use sqlx::PgPool;
+
+extern crate rocket;
 
 // Import all the different layers that make up the backend.
 pub mod controller;
@@ -110,6 +115,7 @@ async fn main() -> Result<(), rocket::Error> {
 
     // Build the repository layers and service layers.
     let user_repository = UserRepositoryImpl::new(pool.clone());
+    let data_repository = DataRepositoryImpl::new(pool.clone());
     let stats_repository = StatsRepositoryImpl::new(pool.clone());
     let mail_repository = MailRepositoryImpl::new(pool.clone());
     let inventory_repository = InventoryRepositoryImpl::new(pool.clone());
@@ -119,6 +125,10 @@ async fn main() -> Result<(), rocket::Error> {
 
     let authentication_service: Arc<dyn AuthenticationService> = Arc::new(
         AuthenticationServiceImpl::new(user_repository.clone(), secret_key),
+    );
+
+    let data_service: Arc<dyn DataService> = Arc::new(
+        DataServiceImpl::new(data_repository.clone())
     );
 
     let stats_service: Arc<dyn StatsService> =
@@ -150,6 +160,7 @@ async fn main() -> Result<(), rocket::Error> {
         .manage(stats_service)
         .manage(mail_service)
         .manage(inventory_service)
+        .manage(data_service)
         // expose swagger ui.
         // Go to http://localhost:8000/docs to view your endpoint documentation.
         .mount(
@@ -157,11 +168,12 @@ async fn main() -> Result<(), rocket::Error> {
             SwaggerUi::new("/docs/<_..>").url("/api-docs/openapi.json", ApiDoc::openapi()),
         )
         // Mount all your routes here.
-        .mount("/account/register", user_routes())
+        .mount("/account", user_routes())
         .mount("/login", authentication_routes())
         .mount("/stats", stats_routes())
         .mount("/mail", mail_routes())
         .mount("/inventory", inventory_routes())
+        .mount("/data", data_routes())
         .attach(cors)
         .launch()
         .await?;

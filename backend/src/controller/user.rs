@@ -35,7 +35,7 @@ struct CreateUserRequest {
     operation_id = "createUser",
     tag = "Users"
 )]
-#[post("/", data = "<payload>")]
+#[post("/register", data = "<payload>")]
 async fn create_user(
     payload: Json<CreateUserRequest>,
     user_service: &State<Arc<dyn UserService>>,

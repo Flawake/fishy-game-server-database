@@ -1,0 +1,64 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT \n            u.name,\n            s.xp,\n            s.coins,\n            s.bucks,\n            s.total_playtime,\n            COALESCE(\n                json_agg(\n                    json_build_object(\n                        'fish_id', fc.fish_id,\n                        'amount', fc.amount,\n                        'max_length', fc.max_length,\n                        'first_caught', fc.first_caught,\n                        'areas', fca.areas,\n                        'baits', fcb.baits\n                    )\n                ) FILTER (WHERE fc.fish_id IS NOT NULL), '[]'\n            ) AS fish_data,\n            COALESCE(\n                json_agg(\n                    DISTINCT jsonb_build_object(\n                        'item_id', i.item_id,\n                        'item_uid', i.item_uid,\n                        'amount', i.amount,\n                        'cell_id', i.cell_id\n                    )\n                ) FILTER (WHERE i.item_id IS NOT NULL), '[]'\n            ) AS inventory_item,\n            COALESCE(\n                json_agg(\n                    DISTINCT jsonb_build_object(\n                        'mail_id', m.mail_id,\n                        'title', m.title,\n                        'message', m.message,\n                        'send_time', m.send_time,\n                        'read', mb.read,\n                        'archived', mb.archived\n                    )\n                ) FILTER (WHERE m.mail_id IS NOT NULL), '[]'\n            ) AS mailbox\n            FROM users u\n            LEFT JOIN stats s ON u.user_id = s.user_id\n            LEFT JOIN fish_caught fc ON u.user_id = fc.user_id\n            LEFT JOIN (\n                SELECT user_id, fish_id, json_agg(area_id) AS areas\n                FROM fish_caught_area\n                GROUP BY user_id, fish_id\n            ) fca ON fc.user_id = fca.user_id AND fc.fish_id = fca.fish_id\n            LEFT JOIN (\n                SELECT user_id, fish_id, json_agg(bait_id) AS baits\n                FROM fish_caught_bait\n                GROUP BY user_id, fish_id\n            ) fcb ON fc.user_id = fcb.user_id AND fc.fish_id = fcb.fish_id\n            LEFT JOIN inventory_item i ON u.user_id = i.user_id\n            LEFT JOIN mailbox mb ON u.user_id = mb.user_id\n            LEFT JOIN mail m ON mb.mail_id = m.mail_id\n            WHERE u.user_id = $1\n            GROUP BY u.user_id, u.name, u.email, u.created, s.xp, s.coins, s.bucks, s.total_playtime;\n            ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "name",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 1,
+        "name": "xp",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 2,
+        "name": "coins",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 3,
+        "name": "bucks",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 4,
+        "name": "total_playtime",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 5,
+        "name": "fish_data",
+        "type_info": "Json"
+      },
+      {
+        "ordinal": 6,
+        "name": "inventory_item",
+        "type_info": "Json"
+      },
+      {
+        "ordinal": 7,
+        "name": "mailbox",
+        "type_info": "Json"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Uuid"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      false,
+      false,
+      false,
+      null,
+      null,
+      null
+    ]
+  },
+  "hash": "1361473558e07bb1775d9ac208738896cd4c0b6d3efec143af005f093547c9ee"
+}

@@ -1,6 +1,6 @@
 {
   "db_name": "PostgreSQL",
-  "query": "INSERT INTO inventory (user_id, item_id, item_uid, amount, cell_id)\n            VALUES ($1, $2, $3, $4, $5)",
+  "query": "INSERT INTO inventory_item (user_id, item_id, item_uid, amount, cell_id)\n            VALUES ($1, $2, $3, $4, $5)",
   "describe": {
     "columns": [],
     "parameters": {
@@ -14,5 +14,5 @@
     },
     "nullable": []
   },
-  "hash": "6b6edcdb5be9a27f0d7c68016e30a54997db2d8615765139a111f748d7f5dfaa"
+  "hash": "3fe70021f9a40b5bfb0f03cf0cb6b235d80467682e9c94c6b349a23be50056dc"
 }

@@ -22,3 +22,44 @@ pub struct StatFish {
     pub bait_id: i32,
     pub area_id: i32,
 }
+
+// Struct to retreive user data
+#[derive(Serialize, Debug, Deserialize)]
+pub struct UserData {
+    pub name: String,
+    pub xp: i32,
+    pub coins: i32,
+    pub bucks: i32,
+    pub total_playtime: i32,
+    pub fish_data: Vec<FishData>,
+    pub inventory_items: Vec<InventoryItem>,
+    pub mailbox: Vec<MailEntry>,
+}
+
+#[derive(Serialize, Debug, Deserialize)]
+pub struct FishData {
+    pub fish_id: i32,
+    pub amount: i32,
+    pub max_length: i32,
+    pub first_caught: chrono::NaiveDate,
+    pub areas: Vec<i32>,
+    pub baits: Vec<i32>,
+}
+
+#[derive(Serialize, Debug, Deserialize)]
+pub struct InventoryItem {
+    pub item_id: i32,
+    pub item_uid: Option<Uuid>,
+    pub amount: i32,
+    pub cell_id: i32,
+}
+
+#[derive(Serialize, Debug, Deserialize)]
+pub struct MailEntry {
+    pub mail_id: Uuid,
+    pub title: String,
+    pub message: String,
+    pub send_time: DateTime<Utc>,
+    pub read: bool,
+    pub archived: bool,
+}
