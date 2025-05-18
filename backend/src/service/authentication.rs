@@ -1,27 +1,17 @@
-use crate::domain::User;
+use crate::domain::{LoginResponse, User};
 use crate::repository::user::UserRepository;
+use crate::utils::jwt::{generate_jwt, Claims};
 use bcrypt::verify;
-use chrono::{Duration, Utc};
 use jsonwebtoken::{decode, DecodingKey, Validation};
-use jsonwebtoken::{encode, EncodingKey, Header};
 use rocket::async_trait;
-use serde::Deserialize;
-use serde::Serialize;
 use std::str::FromStr;
 use uuid::Uuid;
-
-/// Claims are encoded in the JWT.
-#[derive(Debug, Serialize, Deserialize)]
-pub struct Claims {
-    pub user_id: String,
-    pub exp: usize, // Expiration time (as a timestamp)
-}
 
 /// business logic for authorisation.
 #[async_trait]
 pub trait AuthenticationService: Send + Sync {
     /// Returns a JWT when credentials are valid.
-    async fn login(&self, email: String, password: String) -> Result<Option<String>, sqlx::Error>;
+    async fn login(&self, username: String, password: String) -> Result<Option<LoginResponse>, sqlx::Error>;
 
     /// Checks if a JWT is valid given credentials.
     async fn verify_jwt(&self, token: &str) -> Result<Option<User>, sqlx::Error>;
@@ -47,15 +37,20 @@ impl<U: UserRepository> AuthenticationServiceImpl<U> {
 // Implement the authentication service trait for AuthenticationServiceImpl.
 #[async_trait]
 impl<U: UserRepository> AuthenticationService for AuthenticationServiceImpl<U> {
-    async fn login(&self, email: String, password: String) -> Result<Option<String>, sqlx::Error> {
-        let user = match self.user_repository.from_email(email).await? {
+    async fn login(&self, username: String, password: String) -> Result<Option<LoginResponse>, sqlx::Error> {
+        let user = match self.user_repository.from_username(username).await? {
             Some(user) => user,
             None => {
                 return Ok(None);
             }
         };
         match verify_password(&password, &user.salt, &user.password) {
-            true => Ok(generate_jwt(user.user_id, self.secret_key.clone())?),
+            true => Ok(Some(
+                LoginResponse {
+                    code: 200,
+                    jwt: generate_jwt(user.user_id, &self.secret_key)?
+                }
+            )),
             false => Ok(None),
         }
     }
@@ -76,29 +71,6 @@ impl<U: UserRepository> AuthenticationService for AuthenticationServiceImpl<U> {
             Err(_) => Ok(None),
         }
     }
-}
-
-fn generate_jwt(user_id: Uuid, secret_key: String) -> Result<Option<String>, sqlx::Error> {
-    // calculate experation time.
-    let expiration = Utc::now()
-        .checked_add_signed(Duration::hours(24))
-        .expect("Invalid time")
-        .timestamp() as usize;
-
-    let claims = Claims {
-        user_id: user_id.to_string(),
-        exp: expiration,
-    };
-
-    // generate jwt
-    let token = encode(
-        &Header::default(),
-        &claims,
-        &EncodingKey::from_secret(secret_key.as_bytes()),
-    )
-    .expect("JWT creation failed");
-
-    Ok(Some(token))
 }
 
 pub fn verify_password(password: &str, salt: &str, hashed_password: &str) -> bool {

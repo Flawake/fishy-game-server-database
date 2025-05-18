@@ -47,6 +47,7 @@ pub mod docs;
 pub mod domain;
 pub mod repository;
 pub mod service;
+pub mod utils;
 
 // This is responsible for protecting the endpoints with JWT.
 //
@@ -121,10 +122,10 @@ async fn main() -> Result<(), rocket::Error> {
     let inventory_repository = InventoryRepositoryImpl::new(pool.clone());
 
     let user_service: Arc<dyn UserService> =
-        Arc::new(UserServiceImpl::new(user_repository.clone()));
+        Arc::new(UserServiceImpl::new(user_repository.clone(), secret_key.clone()));
 
     let authentication_service: Arc<dyn AuthenticationService> = Arc::new(
-        AuthenticationServiceImpl::new(user_repository.clone(), secret_key),
+        AuthenticationServiceImpl::new(user_repository.clone(), secret_key.clone()),
     );
 
     let data_service: Arc<dyn DataService> = Arc::new(

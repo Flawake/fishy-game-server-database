@@ -1,3 +1,4 @@
+use crate::domain::LoginResponse;
 use crate::service::authentication::AuthenticationService;
 use rocket::http::Status;
 use rocket::post;
@@ -14,13 +15,8 @@ use utoipa::ToSchema;
 struct GetPlacesRequest;
 
 #[derive(Debug, Serialize, Deserialize, ToSchema)]
-struct LoginResponse {
-    jwt: String,
-}
-
-#[derive(Debug, Serialize, Deserialize, ToSchema)]
 struct LoginRequest {
-    email: String,
+    username: String,
     password: String,
 }
 
@@ -44,11 +40,11 @@ async fn login(
     authentication_service: &State<Arc<dyn AuthenticationService>>,
 ) -> Result<Json<LoginResponse>, status::Custom<String>> {
     match authentication_service
-        .login(payload.email.clone(), payload.password.clone())
+        .login(payload.username.clone(), payload.password.clone())
         .await
     {
         Ok(jwt) => match jwt {
-            Some(jwt) => Ok(Json(LoginResponse { jwt })),
+            Some(res) => Ok(Json(res)),
             None => Err(status::Custom(
                 Status::InternalServerError,
                 "Access denied".to_string(),

@@ -14,6 +14,10 @@ pub trait StatsRepository: Send + Sync {
     async fn add_playtime(&self, user_id: Uuid, amount: i32) -> Result<(), sqlx::Error>;
 
     async fn add_fish(&self, fish: StatFish) -> Result<(), sqlx::Error>;
+    
+    async fn select_rod(&self, user_id: Uuid, rod_uid: Uuid) -> Result<(), sqlx::Error>;
+
+    async fn select_bait(&self, user_id: Uuid, bait_id: i32) -> Result<(), sqlx::Error>;
 }
 
 #[derive(Debug, Clone)]
@@ -148,6 +152,54 @@ impl StatsRepository for StatsRepositoryImpl {
         .await?;
 
         tx.commit().await?;
+        Ok(())
+    }
+
+    async fn select_rod(&self, user_id: Uuid, rod_uid: Uuid) -> Result<(), sqlx::Error> {
+        let result = match sqlx::query!(
+            "UPDATE stats
+            SET selected_rod = $2
+            WHERE user_id = $1",
+            user_id,
+            rod_uid,
+        )
+        .execute(&self.pool)
+        .await {
+                Ok(o) => o,
+                Err(e) => {
+                    dbg!(&e);
+                    return Err(e);
+                }
+        };
+
+        if result.rows_affected() == 0 {
+            return Err(Error::RowNotFound);
+        }
+
+        Ok(())
+    }
+
+    async fn select_bait(&self, user_id: Uuid, bait_id: i32) -> Result<(), sqlx::Error> {
+        let result = match sqlx::query!(
+            "UPDATE stats
+            SET selected_bait = $2
+            WHERE user_id = $1",
+            user_id,
+            bait_id,
+        )
+        .execute(&self.pool)
+        .await {
+                Ok(o) => o,
+                Err(e) => {
+                    dbg!(&e);
+                    return Err(e);
+                }
+        };
+
+        if result.rows_affected() == 0 {
+            return Err(Error::RowNotFound);
+        }
+
         Ok(())
     }
 }

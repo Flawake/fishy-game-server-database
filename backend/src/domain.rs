@@ -2,7 +2,14 @@ use chrono::{DateTime, Utc};
 use serde::Deserialize;
 use serde::Serialize;
 use sqlx::FromRow;
+use utoipa::ToSchema;
 use uuid::Uuid;
+
+#[derive(Debug, PartialEq, Eq, Clone, Serialize, Deserialize, FromRow, ToSchema)]
+pub struct LoginResponse {
+    pub code: i16,
+    pub jwt: String,
+}
 
 #[derive(Debug, PartialEq, Eq, Clone, Serialize, Deserialize, FromRow)]
 pub struct User {
@@ -23,6 +30,22 @@ pub struct StatFish {
     pub area_id: i32,
 }
 
+/// Request body for adding playtime of a player
+#[derive(Debug, Serialize, Deserialize, ToSchema)]
+pub struct SelectItemRequest {
+    pub user_id: Uuid,
+    pub item_uid: Option<Uuid>,
+    pub item_id: i32,
+    pub item_type: ItemType,
+}
+
+#[derive(Debug, Serialize, Deserialize, ToSchema, Clone, Copy)]
+pub enum ItemType {
+    Rod,
+    Bait,
+    Extra
+}
+
 // Struct to retreive user data
 #[derive(Serialize, Debug, Deserialize)]
 pub struct UserData {
@@ -31,6 +54,8 @@ pub struct UserData {
     pub coins: i32,
     pub bucks: i32,
     pub total_playtime: i32,
+    pub selected_rod: Option<Uuid>,
+    pub selected_bait: Option<i32>,
     pub fish_data: Vec<FishData>,
     pub inventory_items: Vec<InventoryItem>,
     pub mailbox: Vec<MailEntry>,

@@ -1,3 +1,4 @@
+use crate::domain::LoginResponse;
 use crate::domain::User;
 use crate::service::user::UserService;
 use rocket::get;
@@ -15,8 +16,22 @@ use utoipa::ToSchema;
 #[derive(Debug, Serialize, Deserialize, ToSchema)]
 struct CreateUserRequest {
     pub email: String,
-    pub name: String,
+    pub username: String,
     pub password: String,
+}
+
+/// Request body for changing a password.
+#[derive(Debug, Serialize, Deserialize, ToSchema)]
+struct ChangePasswordRequest {
+    pub username: String,
+    pub new_password: String,
+}
+
+
+/// Request body for requesting a players username.
+#[derive(Debug, Serialize, Deserialize, ToSchema)]
+struct RetreiveUsernameRequest {
+    pub email: String,
 }
 
 // Utoipa is the crate that generates swagger documentation for your endpoints.
@@ -39,16 +54,79 @@ struct CreateUserRequest {
 async fn create_user(
     payload: Json<CreateUserRequest>,
     user_service: &State<Arc<dyn UserService>>,
-) -> Json<bool> {
+) -> Json<LoginResponse> {
     match user_service
         .create(
-            payload.name.clone(),
+            payload.username.clone(),
             payload.email.clone(),
             payload.password.clone(),
         )
         .await
     {
-        Ok(()) => Json(true),
+        Ok(res) => Json(res),
+        Err(_) => Json(LoginResponse{
+            code: 401,
+            jwt: String::from(""),
+        })
+    }
+}
+
+#[utoipa::path(
+    post,
+    path = "/account/retreive_username",
+    request_body = RetreiveUsernameRequest,
+    responses(
+        (status = 201, description = "Username send successfull", body = bool),
+        (status = 400, description = "Invalid input data"),
+        (status = 500, description = "Internal server error")
+    ),
+    description = "Sends the username of the account the email belongs to to the mail address",
+    operation_id = "retreiveUsername",
+    tag = "Users"
+)]
+#[post("/retreive_username", data = "<payload>")]
+async fn retreive_username(
+    payload: Json<RetreiveUsernameRequest>,
+    user_service: &State<Arc<dyn UserService>>,
+) -> Json<bool> {
+    match user_service
+        .retreive_username(
+            payload.email.clone(),
+        )
+        .await
+    {
+        Ok(res) => Json(res),
+        Err(_) => Json(false)
+    }
+}
+
+#[utoipa::path(
+    post,
+    path = "/account/change_password",
+    request_body = ChangePasswordRequest,
+    responses(
+        (status = 201, description = "Changed password", body = bool),
+        (status = 400, description = "Invalid input data"),
+        (status = 500, description = "Internal server error")
+    ),
+    description = "Changes a users password",
+    operation_id = "changePassword",
+    tag = "Users"
+)]
+#[post("/change_password", data = "<payload>")]
+async fn change_password(
+    payload: Json<ChangePasswordRequest>,
+    user_service: &State<Arc<dyn UserService>>,
+) -> Json<bool> {
+    // TODO: We need a way to verify a user is actually changing the password of ut;s own account
+    match user_service
+        .change_password(
+            payload.username.clone(),
+            payload.new_password.clone(),
+        )
+        .await
+    {
+        Ok(res) => Json(res),
         Err(_) => Json(false),
     }
 }
@@ -85,5 +163,5 @@ async fn get_user(user: User) -> Result<Json<GetUserResponse>, status::Custom<St
 
 // Combine all the user routes.
 pub fn user_routes() -> Vec<rocket::Route> {
-    routes![create_user, get_user]
+    routes![create_user, retreive_username, change_password, get_user]
 }

@@ -36,6 +36,8 @@ impl DataRepository for DataRepositoryImpl {
             s.coins,
             s.bucks,
             s.total_playtime,
+            s.selected_rod,
+            s.selected_bait,
             COALESCE(
                 json_agg(
                     json_build_object(
@@ -87,7 +89,7 @@ impl DataRepository for DataRepositoryImpl {
             LEFT JOIN mailbox mb ON u.user_id = mb.user_id
             LEFT JOIN mail m ON mb.mail_id = m.mail_id
             WHERE u.user_id = $1
-            GROUP BY u.user_id, u.name, u.email, u.created, s.xp, s.coins, s.bucks, s.total_playtime;
+            GROUP BY u.user_id, u.name, u.email, u.created, s.xp, s.coins, s.bucks, s.total_playtime, s.selected_rod, s.selected_bait;
             ",
             user_id
         )
@@ -130,6 +132,8 @@ impl DataRepository for DataRepositoryImpl {
                 xp: data.xp,
                 coins: data.coins,
                 bucks: data.bucks,
+                selected_rod: data.selected_rod,
+                selected_bait: data.selected_bait,
                 total_playtime: data.total_playtime,
                 fish_data,
                 inventory_items,

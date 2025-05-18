@@ -1,7 +1,7 @@
 use rocket::async_trait;
 use uuid::Uuid;
 
-use crate::{domain::StatFish, repository::stats::StatsRepository};
+use crate::{domain::{ItemType, SelectItemRequest, StatFish}, repository::stats::StatsRepository};
 
 // Here you add your business logic here.
 #[async_trait]
@@ -15,6 +15,8 @@ pub trait StatsService: Send + Sync {
     async fn add_playtime(&self, user_id: Uuid, amount: i32) -> Result<(), sqlx::Error>;
 
     async fn add_fish(&self, fish: StatFish) -> Result<(), sqlx::Error>;
+
+    async fn select_item(&self, select_item: SelectItemRequest) -> Result<(), sqlx::Error>;
 }
 
 pub struct StatsServiceImpl<T: StatsRepository> {
@@ -49,5 +51,20 @@ impl<R: StatsRepository> StatsService for StatsServiceImpl<R> {
 
     async fn add_fish(&self, fish: StatFish) -> Result<(), sqlx::Error> {
         self.stats_repository.add_fish(fish).await
+    }
+
+    async fn select_item(&self, item_request: SelectItemRequest) -> Result<(), sqlx::Error> {
+        match item_request.item_type {
+            ItemType::Rod => {
+                if let Some(uid) = item_request.item_uid {
+                    return self.stats_repository.select_rod(item_request.user_id, uid).await;
+                }
+                else {
+                    return Err(sqlx::Error::WorkerCrashed);
+                }
+            },
+            ItemType::Bait => self.stats_repository.select_bait(item_request.user_id, item_request.item_id).await,
+            ItemType::Extra => unimplemented!(),
+        }
     }
 }

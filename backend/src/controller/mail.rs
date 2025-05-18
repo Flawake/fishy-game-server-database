@@ -98,7 +98,7 @@ async fn delete_mail(
 
 #[utoipa::path(
     post,
-    path = "/mail/read_state",
+    path = "/mail/change_read_state",
     request_body = ReadMailRequest,
     responses(
         (status = 201, description = "Mail read state changed successfully", body = bool),
@@ -109,7 +109,7 @@ async fn delete_mail(
     operation_id = "readStateMail",
     tag = "Mails"
 )]
-#[post("/read_state", data = "<payload>")]
+#[post("/change_read_state", data = "<payload>")]
 async fn change_read_state(
     payload: Json<ReadMailRequest>,
     mail_service: &State<Arc<dyn MailService>>,
