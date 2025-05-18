@@ -1,5 +1,7 @@
 use crate::domain::User;
 use rocket::async_trait;
+use serde::{Deserialize, Serialize};
+use sqlx::prelude::FromRow;
 use sqlx::types::Uuid;
 use sqlx::PgPool;
 
@@ -9,7 +11,9 @@ pub trait UserRepository: Send + Sync {
 
     async fn from_uuid(&self, user_id: Uuid) -> Result<Option<User>, sqlx::Error>;
 
-    async fn from_email(&self, email: String) -> Result<Option<User>, sqlx::Error>;
+    async fn get_username_from_email(&self, email: String) -> Result<Option<Username>, sqlx::Error>;
+
+    async fn from_username(&self, email: String) -> Result<Option<User>, sqlx::Error>;
 
     // add more functions such as update or delete.
 }
@@ -25,15 +29,20 @@ impl UserRepositoryImpl {
     }
 }
 
+#[derive(Debug, PartialEq, Eq, Clone, Serialize, Deserialize, FromRow)]
+pub struct Username {
+    pub name: String,
+}
+
 #[async_trait]
 impl UserRepository for UserRepositoryImpl {
     async fn create(&self, user: User) -> Result<(), sqlx::Error> {
         let mut tx = self.pool.begin().await?;
 
         // Insert user
-        sqlx::query!(
+        if let Err(e) = sqlx::query!(
             "INSERT INTO users (user_id, name, email, password, salt, created)
-            VALUES ($1, $2, $3, $4, $5, $6)",
+             VALUES ($1, $2, $3, $4, $5, $6)",
             user.user_id,
             user.name,
             user.email,
@@ -42,10 +51,13 @@ impl UserRepository for UserRepositoryImpl {
             user.created
         )
         .execute(&mut *tx)
-        .await?;
+        .await {
+            eprintln!("Error inserting user into database: {:?}", e);
+            return Err(e);
+        }
 
         // Insert stats
-        let result = sqlx::query!(
+        let result = match sqlx::query!(
             "INSERT INTO stats (user_id, xp, coins, bucks, total_playtime)
             VALUES ($1, $2, $3, $4, $5);",
             user.user_id,
@@ -55,13 +67,22 @@ impl UserRepository for UserRepositoryImpl {
             0     // total_playtime
         )
         .execute(&mut *tx)
-        .await?;
+        .await {
+            Ok(o) => o,
+            Err(e) => {
+                dbg!(&e);
+                return Err(e);
+            }
+        };
 
         if result.rows_affected() == 0 {
             return Err(sqlx::Error::RowNotFound);
         }
 
-        tx.commit().await?;
+        if let Err(e) = tx.commit().await {
+            dbg!(&e);
+            return Err(e);
+        };
         Ok(())
     }
 
@@ -75,15 +96,35 @@ impl UserRepository for UserRepositoryImpl {
         )
         .fetch_optional(&self.pool)
         .await?;
+
         Ok(user)
     }
 
-    async fn from_email(&self, email: String) -> Result<Option<User>, sqlx::Error> {
+    async fn get_username_from_email(&self, email: String) -> Result<Option<Username>, sqlx::Error> {
+        let user = match sqlx::query_as!(
+            Username,
+            "SELECT name
+             FROM users
+             WHERE email = $1",
+            email
+        )
+        .fetch_optional(&self.pool)
+        .await {
+            Ok(o) => o,
+            Err(e) => {
+                dbg!(&e);
+                return Err(e);
+            }
+        };
+        Ok(user)
+    }
+
+    async fn from_username(&self, email: String) -> Result<Option<User>, sqlx::Error> {
         let user = sqlx::query_as!(
             User,
             "SELECT user_id, name, email, password, salt, created
              FROM users
-             WHERE email = $1",
+             WHERE name = $1",
             email
         )
         .fetch_optional(&self.pool)

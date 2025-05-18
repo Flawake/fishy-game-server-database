@@ -1,4 +1,4 @@
-use crate::{domain::StatFish, service::stats::StatsService};
+use crate::{domain::{SelectItemRequest, StatFish}, service::stats::StatsService};
 use rocket::{post, routes, serde::json::Json, State};
 use serde::{Deserialize, Serialize};
 use std::sync::Arc;
@@ -187,7 +187,41 @@ async fn add_fish(
     }
 }
 
+#[utoipa::path(
+    post,
+    path = "/stats/select_item",
+    request_body = SelectItemRequest,
+    responses(
+        (status = 201, description = "Successfully selected an item", body = bool),
+        (status = 400, description = "Invalid input data"),
+        (status = 500, description = "Internal server error")
+    ),
+    description = "Select an item",
+    operation_id = "selectItem",
+    tag = "Stats"
+)]
+#[post("/select_item", data = "<payload>")]
+async fn select_item(
+    payload: Json<SelectItemRequest>,
+    stats_service: &State<Arc<dyn StatsService>>,
+) -> Json<bool> {
+    match stats_service
+        .select_item(
+            SelectItemRequest {
+                user_id: payload.user_id,
+                item_uid: payload.item_uid,
+                item_id: payload.item_id,
+                item_type: payload.item_type,
+            }
+        )
+        .await
+    {
+        Ok(()) => Json(true),
+        Err(_) => Json(false),
+    }
+}
+
 // Combine all the user routes.
 pub fn stats_routes() -> Vec<rocket::Route> {
-    routes![add_xp, change_bucks, change_coins, add_playtime, add_fish]
+    routes![add_xp, change_bucks, change_coins, add_playtime, add_fish, select_item]
 }

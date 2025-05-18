@@ -1,5 +1,6 @@
-use crate::domain::User;
+use crate::domain::{LoginResponse, User};
 use crate::repository::user::*;
+use crate::utils::jwt::generate_jwt;
 use bcrypt::hash;
 use chrono::Utc;
 use rocket::async_trait;
@@ -13,19 +14,34 @@ pub trait UserService: Send + Sync {
         name: String,
         email: String,
         password: String,
-    ) -> Result<(), sqlx::Error>;
+    ) -> Result<LoginResponse, sqlx::Error>;
+
+    async fn retreive_username(
+        &self,
+        email: String,
+    ) -> Result<bool, sqlx::Error>;
+
+    async fn change_password(
+        &self,
+        name: String,
+        new_password: String,
+    ) -> Result<bool, sqlx::Error>;
 
     async fn from_uuid(&self, user_id: Uuid) -> Result<Option<User>, sqlx::Error>;
 }
 
 pub struct UserServiceImpl<T: UserRepository> {
     user_repository: T,
+    secret_key: String,
 }
 
 impl<R: UserRepository> UserServiceImpl<R> {
     // create a new function for UserServiceImpl.
-    pub fn new(user_repository: R) -> Self {
-        Self { user_repository }
+    pub fn new(user_repository: R, secret_key: String) -> Self {
+        Self { 
+            user_repository,
+            secret_key 
+        }
     }
 }
 
@@ -37,10 +53,11 @@ impl<R: UserRepository> UserService for UserServiceImpl<R> {
         name: String,
         email: String,
         password: String,
-    ) -> Result<(), sqlx::Error> {
+    ) -> Result<LoginResponse, sqlx::Error> {
         let salt = Uuid::new_v4().to_string();
+        let user_id = Uuid::new_v4();
         let user = User {
-            user_id: Uuid::new_v4(),
+            user_id,
             salt: salt.clone(),
             name,
             email,
@@ -48,8 +65,40 @@ impl<R: UserRepository> UserService for UserServiceImpl<R> {
             created: Utc::now(),
         };
 
-        self.user_repository.create(user).await
+        match self.user_repository.create(user).await {
+            Ok(_) => Ok(LoginResponse {
+                code: 200,
+                jwt: generate_jwt(user_id, &self.secret_key)?,
+                }),
+            Err(e) => {
+                dbg!(&e); 
+                return Err(e);
+            }
+        }
     }
+
+    async fn retreive_username(
+        &self,
+        email: String,
+    ) -> Result<bool, sqlx::Error> {
+        match self.user_repository.get_username_from_email(email).await {
+            Ok(_) => Ok(true),
+            Err(e) => {
+                dbg!(&e); 
+                return Ok(false);
+            }
+        }
+    }
+
+
+    async fn change_password(
+        &self,
+        _name: String,
+        _new_password: String,
+    ) -> Result<bool, sqlx::Error> {
+        Ok(false)
+    }
+
 
     async fn from_uuid(&self, user_id: Uuid) -> Result<Option<User>, sqlx::Error> {
         // recieve the user from the database given a user_id.

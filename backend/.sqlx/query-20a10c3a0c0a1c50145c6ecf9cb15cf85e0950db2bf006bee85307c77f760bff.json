@@ -1,0 +1,15 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "UPDATE stats\n            SET selected_bait = $2\n            WHERE user_id = $1",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Uuid",
+        "Int4"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "20a10c3a0c0a1c50145c6ecf9cb15cf85e0950db2bf006bee85307c77f760bff"
+}

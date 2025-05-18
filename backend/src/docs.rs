@@ -12,6 +12,7 @@ use utoipa::OpenApi;
     get_user,
     login,
 
+    select_item,
     add_xp,
     change_bucks,
     change_coins,

@@ -18,7 +18,7 @@ struct RetreiveDataRequest {
 // Make sure to add your endpoint in docs.rs when you write new endpoints.
 #[utoipa::path(
     post,
-    path = "/data/retreive",
+    path = "/data/retreive_all_playerdata",
     request_body = RetreiveDataRequest,
     responses(
         (status = 201, description = "Retreived successfully", body = bool),
@@ -29,7 +29,7 @@ struct RetreiveDataRequest {
     operation_id = "retreiveItem",
     tag = "userData"
 )]
-#[post("/retreive", data = "<payload>")]
+#[post("/retreive_all_playerdata", data = "<payload>")]
 async fn retreive_player_data(
     payload: Json<RetreiveDataRequest>,
     inventory_service: &State<Arc<dyn DataService>>,

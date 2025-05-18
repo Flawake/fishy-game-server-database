@@ -1,0 +1,15 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "UPDATE stats\n            SET selected_rod = $2\n            WHERE user_id = $1",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Uuid",
+        "Uuid"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "f7f8f7a2770eae27e8b94c400394d48319818c7135cab5964178aa7a18649e24"
+}
