@@ -8,7 +8,7 @@ pub trait InventoryRepository: Send + Sync {
         &self,
         user_id: Uuid,
         item_id: i32,
-        item_uid: Option<Uuid>,
+        item_uid: Uuid,
         amount: i32,
         cell_id: i32,
     ) -> Result<(), sqlx::Error>;
@@ -16,23 +16,20 @@ pub trait InventoryRepository: Send + Sync {
     async fn increase(
         &self,
         user_id: Uuid,
-        item_id: i32,
-        item_uid: Option<Uuid>,
+        item_uid: Uuid,
         amount: i32,
     ) -> Result<(), sqlx::Error>;
 
     async fn destroy(
         &self,
         user_id: Uuid,
-        item_id: i32,
-        item_uid: Option<Uuid>
+        item_uid: Uuid
     ) -> Result<(), sqlx::Error>;
 
     async fn degrade(
         &self,
         user_id: Uuid,
-        item_id: i32,
-        item_uid: Option<Uuid>,
+        item_uid: Uuid,
         amount: i32,
     ) -> Result<(), sqlx::Error>;
 }
@@ -54,7 +51,7 @@ impl InventoryRepository for InventoryRepositoryImpl {
         &self,
         user_id: Uuid,
         item_id: i32,
-        item_uid: Option<Uuid>,
+        item_uid: Uuid,
         amount: i32,
         cell_id: i32,
     ) -> Result<(), sqlx::Error> {
@@ -80,17 +77,15 @@ impl InventoryRepository for InventoryRepositoryImpl {
     async fn increase(
         &self,
         user_id: Uuid,
-        item_id: i32,
-        item_uid: Option<Uuid>,
+        item_uid: Uuid,
         amount: i32,
     ) -> Result<(), sqlx::Error> {
         match sqlx::query!(
             "UPDATE inventory_item
             SET amount = amount + $1
-            WHERE user_id = $2 AND item_id = $3 AND item_uid IS NOT DISTINCT FROM $4",
+            WHERE user_id = $2 AND item_uid = $3",
             amount,
             user_id,
-            item_id,
             item_uid,
         )
         .fetch_optional(&self.pool)
@@ -107,14 +102,12 @@ impl InventoryRepository for InventoryRepositoryImpl {
     async fn destroy(
         &self,
         user_id: Uuid,
-        item_id: i32,
-        item_uid: Option<Uuid>,
+        item_uid: Uuid,
     ) -> Result<(), sqlx::Error> {
         let result = match sqlx::query!(
             "DELETE FROM inventory_item WHERE
-            user_id = $1 AND item_id = $2 AND item_uid IS NOT DISTINCT FROM $3",
+            user_id = $1 AND item_uid = $2",
             user_id,
-            item_id,
             item_uid,
         )
         .execute(&self.pool)
@@ -136,17 +129,15 @@ impl InventoryRepository for InventoryRepositoryImpl {
     async fn degrade(
         &self,
         user_id: Uuid,
-        item_id: i32,
-        item_uid: Option<Uuid>,
+        item_uid: Uuid,
         amount: i32,
     ) -> Result<(), sqlx::Error> {
         match sqlx::query!(
             "UPDATE inventory_item
             SET amount = amount - $1
-            WHERE user_id = $2 AND item_id = $3 AND item_uid IS NOT DISTINCT FROM $4",
+            WHERE user_id = $2 AND item_uid = $3",
             amount,
             user_id,
-            item_id,
             item_uid,
         )
         .fetch_optional(&self.pool)

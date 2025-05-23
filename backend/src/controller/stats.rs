@@ -210,7 +210,6 @@ async fn select_item(
             SelectItemRequest {
                 user_id: payload.user_id,
                 item_uid: payload.item_uid,
-                item_id: payload.item_id,
                 item_type: payload.item_type,
             }
         )

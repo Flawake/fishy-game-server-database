@@ -17,7 +17,7 @@ pub trait StatsRepository: Send + Sync {
     
     async fn select_rod(&self, user_id: Uuid, rod_uid: Uuid) -> Result<(), sqlx::Error>;
 
-    async fn select_bait(&self, user_id: Uuid, bait_id: i32) -> Result<(), sqlx::Error>;
+    async fn select_bait(&self, user_id: Uuid, bait_uid: Uuid) -> Result<(), sqlx::Error>;
 }
 
 #[derive(Debug, Clone)]
@@ -179,13 +179,13 @@ impl StatsRepository for StatsRepositoryImpl {
         Ok(())
     }
 
-    async fn select_bait(&self, user_id: Uuid, bait_id: i32) -> Result<(), sqlx::Error> {
+    async fn select_bait(&self, user_id: Uuid, bait_uid: Uuid) -> Result<(), sqlx::Error> {
         let result = match sqlx::query!(
             "UPDATE stats
             SET selected_bait = $2
             WHERE user_id = $1",
             user_id,
-            bait_id,
+            bait_uid,
         )
         .execute(&self.pool)
         .await {

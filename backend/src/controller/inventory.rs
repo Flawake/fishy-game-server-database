@@ -12,7 +12,7 @@ use crate::service::inventory::InventoryService;
 struct AddItemRequest {
     pub user_id: Uuid,
     pub item_id: i32,
-    pub item_uid: Option<Uuid>,
+    pub item_uid: Uuid,
     pub amount: i32,
     pub cell_id: i32,
 }
@@ -21,8 +21,7 @@ struct AddItemRequest {
 #[derive(Debug, Serialize, Deserialize, ToSchema)]
 struct DegradeItemRequest {
     pub user_id: Uuid,
-    pub item_id: i32,
-    pub item_uid: Option<Uuid>,
+    pub item_uid: Uuid,
     pub amount: i32,
 }
 
@@ -30,8 +29,7 @@ struct DegradeItemRequest {
 #[derive(Debug, Serialize, Deserialize, ToSchema)]
 struct IncreaseItemRequest {
     pub user_id: Uuid,
-    pub item_id: i32,
-    pub item_uid: Option<Uuid>,
+    pub item_uid: Uuid,
     pub amount: i32,
 }
 
@@ -39,8 +37,7 @@ struct IncreaseItemRequest {
 #[derive(Debug, Serialize, Deserialize, ToSchema)]
 struct DestroyItemRequest {
     pub user_id: Uuid,
-    pub item_id: i32,
-    pub item_uid: Option<Uuid>,
+    pub item_uid: Uuid,
 }
 
 
@@ -104,7 +101,6 @@ async fn increase_item(
     match inventory_service
         .increase(
             payload.user_id,
-            payload.item_id,
             payload.item_uid,
             payload.amount,
         )
@@ -139,7 +135,6 @@ async fn degrade_item(
     match inventory_service
         .degrade(
             payload.user_id,
-            payload.item_id,
             payload.item_uid,
             payload.amount,
         )
@@ -174,7 +169,6 @@ async fn destroy_item(
     match inventory_service
         .destroy(
             payload.user_id,
-            payload.item_id,
             payload.item_uid,
         )
         .await

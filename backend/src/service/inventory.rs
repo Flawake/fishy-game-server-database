@@ -10,7 +10,7 @@ pub trait InventoryService: Send + Sync {
         &self,
         user_id: Uuid,
         item_id: i32,
-        item_uid: Option<Uuid>,
+        item_uid: Uuid,
         amount: i32,
         cell_id: i32,
     ) -> Result<(), sqlx::Error>;
@@ -18,23 +18,20 @@ pub trait InventoryService: Send + Sync {
     async fn increase(
         &self,
         user_id: Uuid,
-        item_id: i32,
-        item_uid: Option<Uuid>,
+        item_uid: Uuid,
         amount: i32,
     ) -> Result<(), sqlx::Error>;
 
     async fn destroy(
         &self,
         user_id: Uuid,
-        item_id: i32,
-        item_uid: Option<Uuid>,
+        item_uid: Uuid,
     ) -> Result<(), sqlx::Error>;
 
     async fn degrade(
         &self,
         user_id: Uuid,
-        item_id: i32,
-        item_uid: Option<Uuid>,
+        item_uid: Uuid,
         amount: i32,
     ) -> Result<(), sqlx::Error>;
 }
@@ -57,7 +54,7 @@ impl<R: InventoryRepository> InventoryService for InventoryServiceImpl<R> {
         &self,
         user_id: Uuid,
         item_id: i32,
-        item_uid: Option<Uuid>,
+        item_uid: Uuid,
         amount: i32,
         cell_id: i32,
     ) -> Result<(), sqlx::Error> {
@@ -70,35 +67,32 @@ impl<R: InventoryRepository> InventoryService for InventoryServiceImpl<R> {
     async fn increase(
         &self,
         user_id: Uuid,
-        item_id: i32,
-        item_uid: Option<Uuid>,
+        item_uid: Uuid,
         amount: i32,
     ) -> Result<(), sqlx::Error> {
         if amount <= 0 {
             return Err(sqlx::Error::WorkerCrashed);
         }
-        self.inventory_repository.increase(user_id, item_id, item_uid, amount).await
+        self.inventory_repository.increase(user_id, item_uid, amount).await
     }
 
     async fn destroy(
         &self,
         user_id: Uuid,
-        item_id: i32,
-        item_uid: Option<Uuid>,
+        item_uid: Uuid,
     ) -> Result<(), sqlx::Error> {
-        self.inventory_repository.destroy(user_id, item_id, item_uid).await
+        self.inventory_repository.destroy(user_id, item_uid).await
     }
 
     async fn degrade(
         &self,
         user_id: Uuid,
-        item_id: i32,
-        item_uid: Option<Uuid>,
+        item_uid: Uuid,
         amount: i32,
     ) -> Result<(), sqlx::Error> {
         if amount <= 0 {
             return Err(sqlx::Error::WorkerCrashed);
         }
-        self.inventory_repository.degrade(user_id, item_id, item_uid, amount).await
+        self.inventory_repository.degrade(user_id, item_uid, amount).await
     }
 }

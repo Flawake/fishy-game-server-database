@@ -9,6 +9,8 @@ CREATE TABLE users (
 
 CREATE TABLE stats (
     user_id UUID PRIMARY KEY REFERENCES users(user_id),
+    selected_rod UUID,
+    selected_bait UUID,
     xp INTEGER NOT NULL,
     coins INTEGER NOT NULL,
     bucks INTEGER NOT NULL,
@@ -40,12 +42,13 @@ CREATE TABLE fish_caught_bait (
     FOREIGN KEY (user_id, fish_id) REFERENCES fish_caught(user_id, fish_id)
 );
 
-CREATE TABLE inventory (
+CREATE TABLE inventory_item (
     user_id UUID NOT NULL REFERENCES users(user_id),
     item_id INTEGER NOT NULL,
+    item_uid UUID UNIQUE,
     amount INTEGER NOT NULL,
     cell_id INTEGER NOT NULL,
-    PRIMARY KEY (user_id, item_id)
+    PRIMARY KEY (user_id, item_uid)
 );
 
 CREATE TABLE mail (
@@ -53,15 +56,16 @@ CREATE TABLE mail (
     sender_id UUID NOT NULL REFERENCES users(user_id),
     title TEXT NOT NULL,
     message TEXT NOT NULL,
-    send_time DATE NOT NULL
+    send_time TIMESTAMPTZ NOT NULL
 );
 
 CREATE TABLE mailbox (
     user_id UUID NOT NULL,
     mail_id UUID NOT NULL,
     read BOOLEAN NOT NULL DEFAULT FALSE,
-    is_archived BOOLEAN NOT NULL DEFAULT FALSE,
+    archived BOOLEAN NOT NULL DEFAULT FALSE,
     PRIMARY KEY (user_id, mail_id),
     FOREIGN KEY (user_id) REFERENCES users(user_id),
     FOREIGN KEY (mail_id) REFERENCES mail(mail_id)
 );
+

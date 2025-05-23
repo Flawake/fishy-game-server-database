@@ -79,6 +79,52 @@ impl UserRepository for UserRepositoryImpl {
             return Err(sqlx::Error::RowNotFound);
         }
 
+        // Insert bamboo rod
+        let result = match sqlx::query!(
+            "INSERT INTO inventory_item (user_id, item_uid, item_id, amount, cell_id)
+            VALUES ($1, $2, $3, $4, $5);",
+            user.user_id,     // user_id
+            Uuid::new_v4(),   // item_uid
+            0,                // item_id
+            -1,               // amount
+            0,                // cell id
+        )
+        .execute(&mut *tx)
+        .await {
+            Ok(o) => o,
+            Err(e) => {
+                dbg!(&e);
+                return Err(e);
+            }
+        };
+
+        if result.rows_affected() == 0 {
+            return Err(sqlx::Error::RowNotFound);
+        }
+
+        // Insert hook
+        let result = match sqlx::query!(
+            "INSERT INTO inventory_item (user_id, item_uid, item_id, amount, cell_id)
+            VALUES ($1, $2, $3, $4, $5);",
+            user.user_id,       // user_id
+            Uuid::new_v4(),     // item_uid
+            1000,              // item_id
+            -1,                 // amount
+            0,                  // cell id
+        )
+        .execute(&mut *tx)
+        .await {
+            Ok(o) => o,
+            Err(e) => {
+                dbg!(&e);
+                return Err(e);
+            }
+        };
+
+        if result.rows_affected() == 0 {
+            return Err(sqlx::Error::RowNotFound);
+        }
+
         if let Err(e) = tx.commit().await {
             dbg!(&e);
             return Err(e);
