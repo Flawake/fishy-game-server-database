@@ -55,15 +55,8 @@ impl<R: StatsRepository> StatsService for StatsServiceImpl<R> {
 
     async fn select_item(&self, item_request: SelectItemRequest) -> Result<(), sqlx::Error> {
         match item_request.item_type {
-            ItemType::Rod => {
-                if let Some(uid) = item_request.item_uid {
-                    return self.stats_repository.select_rod(item_request.user_id, uid).await;
-                }
-                else {
-                    return Err(sqlx::Error::WorkerCrashed);
-                }
-            },
-            ItemType::Bait => self.stats_repository.select_bait(item_request.user_id, item_request.item_id).await,
+            ItemType::Rod => self.stats_repository.select_rod(item_request.user_id, item_request.item_uid).await,
+            ItemType::Bait => self.stats_repository.select_bait(item_request.user_id, item_request.item_uid).await,
             ItemType::Extra => unimplemented!(),
         }
     }

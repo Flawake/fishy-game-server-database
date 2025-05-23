@@ -139,6 +139,8 @@ impl DataRepository for DataRepositoryImpl {
                 inventory_items,
                 mailbox,
             };
+
+            println!("rod: {:?}", user_data.selected_rod);
         
             return Ok(Some(user_data));
         }

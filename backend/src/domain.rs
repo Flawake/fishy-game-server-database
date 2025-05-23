@@ -34,8 +34,7 @@ pub struct StatFish {
 #[derive(Debug, Serialize, Deserialize, ToSchema)]
 pub struct SelectItemRequest {
     pub user_id: Uuid,
-    pub item_uid: Option<Uuid>,
-    pub item_id: i32,
+    pub item_uid: Uuid,
     pub item_type: ItemType,
 }
 
@@ -55,7 +54,7 @@ pub struct UserData {
     pub bucks: i32,
     pub total_playtime: i32,
     pub selected_rod: Option<Uuid>,
-    pub selected_bait: Option<i32>,
+    pub selected_bait: Option<Uuid>,
     pub fish_data: Vec<FishData>,
     pub inventory_items: Vec<InventoryItem>,
     pub mailbox: Vec<MailEntry>,
@@ -74,7 +73,7 @@ pub struct FishData {
 #[derive(Serialize, Debug, Deserialize)]
 pub struct InventoryItem {
     pub item_id: i32,
-    pub item_uid: Option<Uuid>,
+    pub item_uid: Uuid,
     pub amount: i32,
     pub cell_id: i32,
 }
