@@ -98,7 +98,7 @@ async fn main() -> Result<(), rocket::Error> {
     // the program will panic if these are not set.
     dotenv().ok();
     let database_url = env::var("DATABASE_URL").expect("DATABASE_URL must be set");
-    let secret_key = env::var("SECRET_KEY").expect("SECRETKEY must be set for generating JWT");
+    let secret_key = env::var("SECRET_KEY").expect("SECRET_KEY must be set for generating JWT");
 
     // Connect to postgres database.
     let pool = PgPool::connect_lazy(&database_url).expect("Failed to connect to the database");
