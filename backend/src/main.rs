@@ -99,6 +99,8 @@ async fn main() -> Result<(), rocket::Error> {
     dotenv().ok();
     let database_url = env::var("DATABASE_URL").expect("DATABASE_URL must be set");
     let secret_key = env::var("SECRET_KEY").expect("SECRET_KEY must be set for generating JWT");
+    let port = env::var("PORT").expect("Connection port must be provided in the ENV");
+    let listening_ip = env::var("IP_ADDR").expect("Listening ip must be provided in the ENV");
 
     // Connect to postgres database.
     let pool = PgPool::connect_lazy(&database_url).expect("Failed to connect to the database");
@@ -147,8 +149,8 @@ async fn main() -> Result<(), rocket::Error> {
 
     // Set rocket configuration.
     let config = Config {
-        port: 8000,
-        address: "0.0.0.0".parse().expect("Invalid address"),
+        port: port.parse().expect(&format!("could not parse port: {:?}", port)),
+        address: listening_ip.parse().expect(&format!("Could not parse listening ip: {:?}", listening_ip)),
         ..Config::debug_default()
     };
 
