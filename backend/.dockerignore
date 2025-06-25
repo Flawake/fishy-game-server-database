@@ -1,0 +1,20 @@
+# Ignore local env files
+.env
+.env.local
+*.env.*
+
+# Ignore Git files
+.git
+.gitignore
+
+# Ignore Docker-related files not needed in the image
+.dockerignore
+Dockerfile*
+
+# Ignore OS & editor files
+.DS_Store
+*.swp
+*.swo
+.idea
+.vscode
+*.log
