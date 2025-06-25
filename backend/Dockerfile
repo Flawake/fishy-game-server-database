@@ -15,7 +15,7 @@ RUN cargo build --release
 
 
 # Use a minimal image for the final container
-FROM debian:buster-slim
+FROM debian:bookworm-slim
 
 # Copy the compiled binary from the builder stage
 COPY --from=builder /usr/src/server/target/release/backend /usr/local/bin/backend
@@ -23,5 +23,3 @@ COPY --from=builder /usr/src/server/target/release/backend /usr/local/bin/backen
 # Set the startup command to run your binary
 CMD ["backend"]
 
-# If your Rust server listens on a port, expose it here (optional)
-EXPOSE 8000
