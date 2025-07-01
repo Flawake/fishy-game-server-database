@@ -2,8 +2,6 @@ use rocket::async_trait;
 use sqlx::PgPool;
 use uuid::Uuid;
 
-use crate::domain::{FishData, InventoryItem, MailEntry, UserData};
-
 #[async_trait]
 pub trait FriendRepository: Send + Sync {
     async fn remove_friend(&self, user_one_id: Uuid, user_two_id: Uuid) -> Result<(), sqlx::Error>;
@@ -29,7 +27,7 @@ impl FriendRepositoryImpl {
 #[async_trait]
 impl FriendRepository for FriendRepositoryImpl {
     async fn remove_friend(&self, user_one_id: Uuid, user_two_id: Uuid) -> Result<(), sqlx::Error> {
-        let result = match sqlx:query!(
+        let result = match sqlx::query!(
             "DELETE FROM friends 
                 WHERE (user_one_id = $1 AND user_two_id = $2)
                 OR (user_one_id = $2 AND user_two_id = $1)",
@@ -45,7 +43,7 @@ impl FriendRepository for FriendRepositoryImpl {
             }
         };
 
-        if(result.rows_affected() == 0) {
+        if result.rows_affected() == 0 {
             return Err(sqlx::Error::RowNotFound);
         }
 
@@ -54,7 +52,7 @@ impl FriendRepository for FriendRepositoryImpl {
 
     async fn add_friend(&self, user_one_id: Uuid, user_two_id: Uuid) -> Result<(), sqlx::Error> {
         let result = match sqlx::query!(
-            "INSERT INTO friends user_one_id, user_two_id VALUES ($1, $2s)"
+            "INSERT INTO friends (user_one_id, user_two_id) VALUES ($1, $2)",
             user_one_id,
             user_two_id,
         )
@@ -65,7 +63,7 @@ impl FriendRepository for FriendRepositoryImpl {
                 dbg!(&e);
                 return Err(e);
             }
-        }
+        };
 
         if result.rows_affected() == 0 {
             return Err(sqlx::Error::RowNotFound);

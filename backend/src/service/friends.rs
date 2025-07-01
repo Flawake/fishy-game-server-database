@@ -1,3 +1,8 @@
+use rocket::async_trait;
+use uuid::Uuid;
+
+use crate::repository::friends::FriendRepository;
+
 /// business logic for authorisation.
 #[async_trait]
 pub trait FriendService: Send + Sync {
@@ -22,22 +27,22 @@ impl<U: FriendRepository> FriendServiceImpl<U> {
     }
 }
 
-// Implement the data service trait for FriendServiceImpl.
+// Implement the friend service trait for FriendServiceImpl.
 #[async_trait]
 impl<U: FriendRepository> FriendService for FriendServiceImpl<U> {
     async fn remove_friend(&self, user_one_id: Uuid, user_two_id: Uuid) -> Result<(), sqlx::Error> {
-        self.friend_repository.remove_friend(user_one_id, user_two_id);
+        self.friend_repository.remove_friend(user_one_id, user_two_id).await
     }
 
     async fn add_friend(&self, user_one: Uuid, user_two: Uuid) -> Result<(), sqlx::Error> {
-        self.friend_repository.add_friend(user_one, user_two);
+        self.friend_repository.add_friend(user_one, user_two).await
     }
 
     async fn remove_friend_request(&self, original_sender: Uuid, original_receiver: Uuid) -> Result<(), sqlx::Error> {
-        self.friend_repository.remove_friend_request(original_sender, original_receiver);
+        self.friend_repository.remove_friend_request(original_sender, original_receiver).await
     }
 
     async fn add_friend_request(&self, sender: Uuid, receiver: Uuid) -> Result<(), sqlx::Error> {
-        self.friend_repository.add_friend_request(sender, receiver);
+        self.friend_repository.add_friend_request(sender, receiver).await
     }
 }
