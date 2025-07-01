@@ -7,6 +7,16 @@ CREATE TABLE users (
     created TIMESTAMPTZ NOT NULL
 );
 
+CREATE TABLE friends {
+    user_one_id: UUID,
+    user_two_id: UUID,
+}
+
+CREATE TABLE friend_requests {
+    sender_id: UUID,
+    receiver_id: UUID,
+}
+
 CREATE TABLE stats (
     user_id UUID PRIMARY KEY REFERENCES users(user_id),
     selected_rod UUID,
