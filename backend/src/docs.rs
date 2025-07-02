@@ -13,10 +13,9 @@ use utoipa::OpenApi;
     get_user,
     login,
 
-    add_friend,
     remove_friend,
     add_friend_request,
-    remove_friend_request,
+    handle_friend_request,
 
     select_item,
     add_xp,
