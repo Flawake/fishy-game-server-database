@@ -10,14 +10,14 @@ use crate::service::friends::FriendService;
 /// Request body for adding or removing friend.
 #[derive(Debug, Serialize, Deserialize, ToSchema)]
 struct FriendRequests {
-    pub user_one_id: Uuid,
-    pub user_two_id: Uuid,
+    pub sender: Uuid,
+    pub receiver: Uuid,
 }
 
 #[derive(Debug, Serialize, Deserialize, ToSchema)]
 struct HandleFriendRequest {
-    pub user_one_id: Uuid,
-    pub user_two_id: Uuid,
+    pub sender: Uuid,
+    pub receiver: Uuid,
     pub request_accepted: bool,
 }
 
@@ -42,8 +42,8 @@ async fn remove_friend(
 ) -> Json<bool> {
     match friends_service
         .remove_friend(
-            payload.user_one_id,
-            payload.user_two_id,
+            payload.sender,
+            payload.receiver,
         )
         .await
     {
@@ -72,8 +72,8 @@ async fn add_friend_request(
 ) -> Json<bool> {
     match friends_service
         .add_friend_request(
-            payload.user_one_id,
-            payload.user_two_id,
+            payload.sender,
+            payload.receiver,
         )
         .await
     {
@@ -104,8 +104,8 @@ async fn handle_friend_request(
     if payload.request_accepted == true {
         if friends_service
             .add_friend(
-                payload.user_one_id,
-                payload.user_two_id,
+                payload.sender,
+                payload.receiver,
             )
             .await.is_err() {
             return Json(false)
@@ -113,8 +113,8 @@ async fn handle_friend_request(
     }
     match friends_service
         .remove_friend_request(
-            payload.user_one_id,
-            payload.user_two_id,
+            payload.sender,
+            payload.receiver,
         )
         .await
     {
