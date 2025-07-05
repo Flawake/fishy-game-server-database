@@ -96,11 +96,13 @@ impl FriendRepository for FriendRepositoryImpl {
         Ok(())
     }
 
-    async fn add_friend_request(&self, sender: Uuid, receiver: Uuid) -> Result<(), sqlx::Error> {
+    async fn add_friend_request(&self, sender: Uuid, receiver: Uuid, sender: Uuid) -> Result<(), sqlx::Error> {
         let result = match sqlx::query!(
-            "INSERT INTO friend_requests (sender_id, receiver_id) VALUES ($1, $2)",
+            "INSERT INTO friend_requests (user_one_id, user_two_id, request_sender_id, request_created_time) VALUES ($1, $2, $3, $4)",
             sender,
             receiver,
+            sender,
+            todo!(),
         )
         .execute(&self.pool)
         .await {

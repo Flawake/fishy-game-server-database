@@ -10,14 +10,15 @@ use crate::service::friends::FriendService;
 /// Request body for adding or removing friend.
 #[derive(Debug, Serialize, Deserialize, ToSchema)]
 struct FriendRequests {
+    pub user_one: Uuid,
+    pub user_two: Uuid,
     pub sender: Uuid,
-    pub receiver: Uuid,
 }
 
 #[derive(Debug, Serialize, Deserialize, ToSchema)]
 struct HandleFriendRequest {
-    pub sender: Uuid,
-    pub receiver: Uuid,
+    pub user_one: Uuid,
+    pub user_two: Uuid,
     pub request_accepted: bool,
 }
 
@@ -42,8 +43,8 @@ async fn remove_friend(
 ) -> Json<bool> {
     match friends_service
         .remove_friend(
-            payload.sender,
-            payload.receiver,
+            payload.user_one,
+            payload.user_two,
         )
         .await
     {
@@ -72,8 +73,9 @@ async fn add_friend_request(
 ) -> Json<bool> {
     match friends_service
         .add_friend_request(
-            payload.sender,
-            payload.receiver,
+            payload.user_one,
+            payload.user_two,
+            sender,
         )
         .await
     {
@@ -96,7 +98,7 @@ async fn add_friend_request(
     operation_id = "handleFriendRequest",
     tag = "friends"
 )]
-#[post("/handle_friend_request", data = "<payload>")]
+#[post("/handle_request", data = "<payload>")]
 async fn handle_friend_request(
     payload: Json<HandleFriendRequest>,
     friends_service: &State<Arc<dyn FriendService>>,
@@ -104,8 +106,8 @@ async fn handle_friend_request(
     if payload.request_accepted == true {
         if friends_service
             .add_friend(
-                payload.sender,
-                payload.receiver,
+                payload.user_one,
+                payload.user_two,
             )
             .await.is_err() {
             return Json(false)
@@ -113,8 +115,8 @@ async fn handle_friend_request(
     }
     match friends_service
         .remove_friend_request(
-            payload.sender,
-            payload.receiver,
+            payload.user_one,
+            payload.user_two,
         )
         .await
     {
