@@ -1,5 +1,6 @@
 use rocket::async_trait;
 use sqlx::PgPool;
+use chrono::{DateTime, Utc};
 use uuid::Uuid;
 
 #[async_trait]
@@ -10,7 +11,7 @@ pub trait FriendRepository: Send + Sync {
 
     async fn remove_friend_request(&self, original_sender: Uuid, original_receiver: Uuid) -> Result<(), sqlx::Error>;
 
-    async fn add_friend_request(&self, sender: Uuid, receiver: Uuid) -> Result<(), sqlx::Error>;
+    async fn add_friend_request(&self, sender: Uuid, receiver: Uuid, sender_id: Uuid, request_created_time: DateTime<Utc>) -> Result<(), sqlx::Error>;
 }
 
 #[derive(Debug, Clone)]
@@ -75,8 +76,8 @@ impl FriendRepository for FriendRepositoryImpl {
     async fn remove_friend_request(&self, user_one_id: Uuid, user_two_id: Uuid) -> Result<(), sqlx::Error> {
         let result = match sqlx::query!(
             "DELETE FROM friend_requests 
-                WHERE (sender_id = $1 AND receiver_id = $2)
-                OR (sender_id = $2 AND receiver_id = $1)",
+                WHERE (user_one_id = $1 AND user_two_id = $2)
+                OR (user_one_id = $2 AND user_two_id = $1)",
             user_one_id,
             user_two_id,
         )
@@ -96,13 +97,13 @@ impl FriendRepository for FriendRepositoryImpl {
         Ok(())
     }
 
-    async fn add_friend_request(&self, sender: Uuid, receiver: Uuid, sender: Uuid) -> Result<(), sqlx::Error> {
+    async fn add_friend_request(&self, sender: Uuid, receiver: Uuid, sender_id: Uuid, request_created_time: DateTime<Utc>) -> Result<(), sqlx::Error> {
         let result = match sqlx::query!(
             "INSERT INTO friend_requests (user_one_id, user_two_id, request_sender_id, request_created_time) VALUES ($1, $2, $3, $4)",
             sender,
             receiver,
-            sender,
-            todo!(),
+            sender_id,
+            request_created_time,
         )
         .execute(&self.pool)
         .await {

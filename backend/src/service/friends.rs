@@ -1,4 +1,5 @@
 use rocket::async_trait;
+use chrono::Utc;
 use uuid::Uuid;
 
 use crate::repository::friends::FriendRepository;
@@ -53,6 +54,6 @@ impl<U: FriendRepository> FriendService for FriendServiceImpl<U> {
         } else {
             (user_two_id, user_one_id)
         };
-        self.friend_repository.add_friend_request(user_one, user_two, sender).await
+        self.friend_repository.add_friend_request(user_one, user_two, sender, Utc::now()).await
     }
 }

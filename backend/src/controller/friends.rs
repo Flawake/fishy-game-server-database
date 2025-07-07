@@ -12,7 +12,7 @@ use crate::service::friends::FriendService;
 struct FriendRequests {
     pub user_one: Uuid,
     pub user_two: Uuid,
-    pub sender: Uuid,
+    pub sender_id: Uuid,
 }
 
 #[derive(Debug, Serialize, Deserialize, ToSchema)]
@@ -75,7 +75,7 @@ async fn add_friend_request(
         .add_friend_request(
             payload.user_one,
             payload.user_two,
-            sender,
+            payload.sender_id,
         )
         .await
     {
