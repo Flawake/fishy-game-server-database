@@ -1,0 +1,17 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "INSERT INTO friend_requests (user_one_id, user_two_id, request_sender_id, request_created_time) VALUES ($1, $2, $3, $4)",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Uuid",
+        "Uuid",
+        "Uuid",
+        "Timestamptz"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "ab697ca09d367d10a03171d63a6f4e6df9c2b277a4583d9b37a7ae4c140f4c03"
+}

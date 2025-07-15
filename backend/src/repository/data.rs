@@ -2,7 +2,8 @@ use rocket::async_trait;
 use sqlx::PgPool;
 use uuid::Uuid;
 
-use crate::domain::{FishData, InventoryItem, MailEntry, UserData};
+use crate::domain::{FishData, Friend, FriendRequest, InventoryItem, MailEntry, UserData};
+
 
 #[async_trait]
 pub trait DataRepository: Send + Sync {
@@ -71,7 +72,21 @@ impl DataRepository for DataRepositoryImpl {
                         'archived', mb.archived
                     )
                 ) FILTER (WHERE m.mail_id IS NOT NULL), '[]'
-            ) AS mailbox
+            ) AS mailbox,
+            COALESCE(
+                (
+                    SELECT json_agg(json_build_array(f.user_one_id, f.user_two_id))
+                    FROM friends f
+                    WHERE f.user_one_id = $1 OR f.user_two_id = $1
+                ), '[]'
+            ) AS friends,
+            COALESCE(
+                (
+                    SELECT json_agg(json_build_array(fr.user_one_id, fr.user_two_id, fr.request_sender_id))
+                    FROM friend_requests fr
+                    WHERE fr.user_one_id = $1 OR fr.user_two_id = $1
+                ), '[]'
+            ) AS friend_requests
             FROM users u
             LEFT JOIN stats s ON u.user_id = s.user_id
             LEFT JOIN fish_caught fc ON u.user_id = fc.user_id
@@ -126,6 +141,22 @@ impl DataRepository for DataRepositoryImpl {
                     return Err(sqlx::Error::WorkerCrashed);
                 }
             };
+
+            let friends: Vec<Friend> = match serde_json::from_value(data.friends.unwrap_or_default()) {
+                Ok(o) => o,
+                Err(e) => {
+                    dbg!(&e);
+                    return Err(sqlx::Error::WorkerCrashed);
+                }
+            };
+
+            let friend_requests: Vec<FriendRequest> = match serde_json::from_value(data.friend_requests.unwrap_or_default()) {
+                Ok(o) => o,
+                Err(e) => {
+                    dbg!(&e);
+                    return Err(sqlx::Error::WorkerCrashed);
+                }
+            };
         
             let user_data = UserData {
                 name: data.name,
@@ -138,6 +169,8 @@ impl DataRepository for DataRepositoryImpl {
                 fish_data,
                 inventory_items,
                 mailbox,
+                friends,
+                friend_requests,
             };
 
             println!("rod: {:?}", user_data.selected_rod);
