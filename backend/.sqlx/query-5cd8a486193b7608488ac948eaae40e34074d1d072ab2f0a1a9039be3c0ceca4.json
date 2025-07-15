@@ -1,0 +1,15 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "DELETE FROM friend_requests \n                WHERE (user_one_id = $1 AND user_two_id = $2)\n                OR (user_one_id = $2 AND user_two_id = $1)",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Uuid",
+        "Uuid"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "5cd8a486193b7608488ac948eaae40e34074d1d072ab2f0a1a9039be3c0ceca4"
+}
