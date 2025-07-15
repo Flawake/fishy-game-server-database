@@ -1,12 +1,14 @@
 use crate::controller::authentication::authentication_routes;
 use crate::controller::stats::stats_routes;
 use crate::domain::User;
+use crate::repository::friends::FriendRepositoryImpl;
 use crate::service::authentication::*;
 use crate::service::user::UserService;
 use crate::AuthenticationService;
 use controller::data::data_routes;
 use controller::inventory::inventory_routes;
 use controller::mail::mail_routes;
+use controller::friends::friend_routes;
 use dotenv::dotenv;
 use repository::data::DataRepositoryImpl;
 use repository::inventory::InventoryRepositoryImpl;
@@ -23,6 +25,8 @@ use rocket_cors::AllowedOrigins;
 use rocket_cors::{AllowedHeaders, CorsOptions};
 use service::data::DataService;
 use service::data::DataServiceImpl;
+use service::friends::FriendService;
+use service::friends::FriendServiceImpl;
 use service::inventory::InventoryService;
 use service::inventory::InventoryServiceImpl;
 use service::mail::MailService;
@@ -119,6 +123,7 @@ async fn main() -> Result<(), rocket::Error> {
     // Build the repository layers and service layers.
     let user_repository = UserRepositoryImpl::new(pool.clone());
     let data_repository = DataRepositoryImpl::new(pool.clone());
+    let friends_repository = FriendRepositoryImpl::new(pool.clone());
     let stats_repository = StatsRepositoryImpl::new(pool.clone());
     let mail_repository = MailRepositoryImpl::new(pool.clone());
     let inventory_repository = InventoryRepositoryImpl::new(pool.clone());
@@ -132,6 +137,10 @@ async fn main() -> Result<(), rocket::Error> {
 
     let data_service: Arc<dyn DataService> = Arc::new(
         DataServiceImpl::new(data_repository.clone())
+    );
+
+    let friend_service: Arc<dyn FriendService> = Arc::new(
+        FriendServiceImpl::new(friends_repository.clone())
     );
 
     let stats_service: Arc<dyn StatsService> =
@@ -164,6 +173,7 @@ async fn main() -> Result<(), rocket::Error> {
         .manage(mail_service)
         .manage(inventory_service)
         .manage(data_service)
+        .manage(friend_service)
         // expose swagger ui.
         // Go to http://localhost:8000/docs to view your endpoint documentation.
         .mount(
@@ -177,6 +187,7 @@ async fn main() -> Result<(), rocket::Error> {
         .mount("/mail", mail_routes())
         .mount("/inventory", inventory_routes())
         .mount("/data", data_routes())
+        .mount("/friend", friend_routes())
         .attach(cors)
         .launch()
         .await?;

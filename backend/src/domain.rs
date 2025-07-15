@@ -58,6 +58,8 @@ pub struct UserData {
     pub fish_data: Vec<FishData>,
     pub inventory_items: Vec<InventoryItem>,
     pub mailbox: Vec<MailEntry>,
+    pub friends: Vec<Friend>,
+    pub friend_requests: Vec<FriendRequest>
 }
 
 #[derive(Serialize, Debug, Deserialize)]
@@ -86,4 +88,17 @@ pub struct MailEntry {
     pub send_time: DateTime<Utc>,
     pub read: bool,
     pub archived: bool,
+}
+
+#[derive(Serialize, Debug, Deserialize)]
+pub struct Friend {
+    pub user_one: Uuid,
+    pub user_two: Uuid,
+}
+
+#[derive(Serialize, Debug, Deserialize)]
+pub struct FriendRequest {
+    pub user_one: Uuid,
+    pub user_two: Uuid,
+    pub request_sender_id: Uuid,
 }
