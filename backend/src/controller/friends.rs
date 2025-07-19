@@ -41,7 +41,7 @@ struct HandleFriendRequest {
     ),
     description = "Removes a friend from the database",
     operation_id = "removeFriend",
-    tag = "friends"
+    tag = "Friends"
 )]
 #[post("/remove_friend", data = "<payload>")]
 async fn remove_friend(
@@ -71,7 +71,7 @@ async fn remove_friend(
     ),
     description = "Adds a friend request to the database",
     operation_id = "addFriendRequest",
-    tag = "friends"
+    tag = "Friends"
 )]
 #[post("/add_friend_request", data = "<payload>")]
 async fn add_friend_request(
@@ -103,7 +103,7 @@ async fn add_friend_request(
     ),
     description = "Handles a pending friend request",
     operation_id = "handleFriendRequest",
-    tag = "friends"
+    tag = "Friends"
 )]
 #[post("/handle_request", data = "<payload>")]
 async fn handle_friend_request(

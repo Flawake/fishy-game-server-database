@@ -61,11 +61,10 @@ CREATE TABLE fish_caught_bait (
 
 CREATE TABLE inventory_item (
     user_id UUID NOT NULL REFERENCES users(user_id),
-    item_id INTEGER NOT NULL,
-    item_uid UUID UNIQUE,
-    amount INTEGER NOT NULL,
-    cell_id INTEGER NOT NULL,
-    PRIMARY KEY (user_id, item_uid)
+    item_uuid UUID UNIQUE,
+    definition_id INTEGER NOT NULL,
+    state_blob TEXT NOT NULL,
+    PRIMARY KEY (user_id, item_uuid)
 );
 
 CREATE TABLE mail (

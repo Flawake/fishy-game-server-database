@@ -81,13 +81,12 @@ impl UserRepository for UserRepositoryImpl {
 
         // Insert bamboo rod
         let result = match sqlx::query!(
-            "INSERT INTO inventory_item (user_id, item_uid, item_id, amount, cell_id)
-            VALUES ($1, $2, $3, $4, $5);",
+            "INSERT INTO inventory_item (user_id, item_uuid, definition_id, state_blob)
+            VALUES ($1, $2, $3, $4);",
             user.user_id,     // user_id
             Uuid::new_v4(),   // item_uid
-            0,                // item_id
-            -1,               // amount
-            0,                // cell id
+            1000,             // definition_id
+            "",               // state_blob
         )
         .execute(&mut *tx)
         .await {
@@ -104,13 +103,12 @@ impl UserRepository for UserRepositoryImpl {
 
         // Insert hook
         let result = match sqlx::query!(
-            "INSERT INTO inventory_item (user_id, item_uid, item_id, amount, cell_id)
-            VALUES ($1, $2, $3, $4, $5);",
-            user.user_id,       // user_id
-            Uuid::new_v4(),     // item_uid
-            1000,              // item_id
-            -1,                 // amount
-            0,                  // cell id
+            "INSERT INTO inventory_item (user_id, item_uuid, definition_id, state_blob)
+            VALUES ($1, $2, $3, $4);",
+            user.user_id,     // user_id
+            Uuid::new_v4(),   // item_uid
+            0,                // definition_id
+            "",               // state_blob
         )
         .execute(&mut *tx)
         .await {
