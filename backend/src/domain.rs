@@ -74,10 +74,9 @@ pub struct FishData {
 
 #[derive(Serialize, Debug, Deserialize)]
 pub struct InventoryItem {
-    pub item_id: i32,
-    pub item_uid: Uuid,
-    pub amount: i32,
-    pub cell_id: i32,
+    pub item_uuid: Uuid,
+    pub definition_id: i32,
+    pub state_blob: String,
 }
 
 #[derive(Serialize, Debug, Deserialize)]

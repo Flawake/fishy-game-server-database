@@ -29,10 +29,8 @@ use utoipa::OpenApi;
     change_read_state,
     change_archive_state,
 
-    add_item,
-    increase_item,
+    add_or_update_item,
     destroy_item,
-    degrade_item,
 
     retreive_player_data,
 ))]

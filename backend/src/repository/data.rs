@@ -54,12 +54,11 @@ impl DataRepository for DataRepositoryImpl {
             COALESCE(
                 json_agg(
                     DISTINCT jsonb_build_object(
-                        'item_id', i.item_id,
-                        'item_uid', i.item_uid,
-                        'amount', i.amount,
-                        'cell_id', i.cell_id
+                        'definition_id', i.definition_id,
+                        'item_uuid', i.item_uuid,
+                        'state_blob', i.state_blob
                     )
-                ) FILTER (WHERE i.item_id IS NOT NULL), '[]'
+                ) FILTER (WHERE i.definition_id IS NOT NULL), '[]'
             ) AS inventory_item,
             COALESCE(
                 json_agg(
