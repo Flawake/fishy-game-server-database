@@ -86,7 +86,7 @@ impl UserRepository for UserRepositoryImpl {
             user.user_id,     // user_id
             Uuid::new_v4(),   // item_uid
             1000,             // definition_id
-            "",               // state_blob
+            "AQABAAX2////",   // state_blob
         )
         .execute(&mut *tx)
         .await {
@@ -108,7 +108,7 @@ impl UserRepository for UserRepositoryImpl {
             user.user_id,     // user_id
             Uuid::new_v4(),   // item_uid
             0,                // definition_id
-            "",               // state_blob
+            "AQABAAX2////",   // state_blob
         )
         .execute(&mut *tx)
         .await {
