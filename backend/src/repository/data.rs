@@ -171,8 +171,6 @@ impl DataRepository for DataRepositoryImpl {
                 friends,
                 friend_requests,
             };
-
-            println!("rod: {:?}", user_data.selected_rod);
         
             return Ok(Some(user_data));
         }
