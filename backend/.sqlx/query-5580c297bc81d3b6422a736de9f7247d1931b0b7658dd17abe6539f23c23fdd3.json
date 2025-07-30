@@ -1,0 +1,12 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "DELETE FROM player_effects\n            WHERE expiry_time <= NOW()",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": []
+    },
+    "nullable": []
+  },
+  "hash": "5580c297bc81d3b6422a736de9f7247d1931b0b7658dd17abe6539f23c23fdd3"
+}

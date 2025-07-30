@@ -1,5 +1,6 @@
 use crate::controller::authentication::*;
 use crate::controller::data::*;
+use crate::controller::effects::*;
 use crate::controller::friends::*;
 use crate::controller::inventory::*;
 use crate::controller::mail::*;
@@ -31,6 +32,10 @@ use utoipa::OpenApi;
 
     add_or_update_item,
     destroy_item,
+
+    add_effect,
+    remove_expired_effects,
+    cleanup_all_expired_effects,
 
     retreive_player_data,
 ))]

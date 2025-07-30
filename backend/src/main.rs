@@ -6,11 +6,13 @@ use crate::service::authentication::*;
 use crate::service::user::UserService;
 use crate::AuthenticationService;
 use controller::data::data_routes;
+use controller::effects::routes as effects_routes;
 use controller::inventory::inventory_routes;
 use controller::mail::mail_routes;
 use controller::friends::friend_routes;
 use dotenv::dotenv;
 use repository::data::DataRepositoryImpl;
+use repository::effects::EffectsRepositoryImpl;
 use repository::inventory::InventoryRepositoryImpl;
 use repository::mail::MailRepositoryImpl;
 use repository::stats::StatsRepositoryImpl;
@@ -25,6 +27,8 @@ use rocket_cors::AllowedOrigins;
 use rocket_cors::{AllowedHeaders, CorsOptions};
 use service::data::DataService;
 use service::data::DataServiceImpl;
+use service::effects::EffectsService;
+use service::effects::EffectsServiceImpl;
 use service::friends::FriendService;
 use service::friends::FriendServiceImpl;
 use service::inventory::InventoryService;
@@ -123,6 +127,7 @@ async fn main() -> Result<(), rocket::Error> {
     // Build the repository layers and service layers.
     let user_repository = UserRepositoryImpl::new(pool.clone());
     let data_repository = DataRepositoryImpl::new(pool.clone());
+    let effects_repository = EffectsRepositoryImpl::new(pool.clone());
     let friends_repository = FriendRepositoryImpl::new(pool.clone());
     let stats_repository = StatsRepositoryImpl::new(pool.clone());
     let mail_repository = MailRepositoryImpl::new(pool.clone());
@@ -154,6 +159,10 @@ async fn main() -> Result<(), rocket::Error> {
         InventoryServiceImpl::new(inventory_repository.clone())
     );
 
+    let effects_service: Arc<dyn EffectsService> = Arc::new(
+        EffectsServiceImpl::new(effects_repository.clone())
+    );
+
     // Add here more repositories and services when your backend grows.
 
     // Set rocket configuration.
@@ -174,6 +183,7 @@ async fn main() -> Result<(), rocket::Error> {
         .manage(inventory_service)
         .manage(data_service)
         .manage(friend_service)
+        .manage(effects_service)
         // expose swagger ui.
         // Go to http://localhost:8000/docs to view your endpoint documentation.
         .mount(
@@ -188,6 +198,7 @@ async fn main() -> Result<(), rocket::Error> {
         .mount("/inventory", inventory_routes())
         .mount("/data", data_routes())
         .mount("/friend", friend_routes())
+        .mount("/effects", effects_routes())
         .attach(cors)
         .launch()
         .await?;

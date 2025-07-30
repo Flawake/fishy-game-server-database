@@ -85,3 +85,14 @@ CREATE TABLE mailbox (
     FOREIGN KEY (mail_id) REFERENCES mail(mail_id)
 );
 
+CREATE TABLE player_effects (
+    user_id UUID NOT NULL REFERENCES users(user_id),
+    item_id INTEGER NOT NULL,
+    expiry_time TIMESTAMPTZ NOT NULL,
+    PRIMARY KEY (user_id, item_id),
+    CONSTRAINT valid_expiry_time CHECK (expiry_time > NOW())
+);
+
+CREATE INDEX idx_player_effects_expiry ON player_effects(expiry_time);
+CREATE INDEX idx_player_effects_user_id ON player_effects(user_id);
+
