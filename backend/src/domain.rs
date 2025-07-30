@@ -59,7 +59,8 @@ pub struct UserData {
     pub inventory_items: Vec<InventoryItem>,
     pub mailbox: Vec<MailEntry>,
     pub friends: Vec<Friend>,
-    pub friend_requests: Vec<FriendRequest>
+    pub friend_requests: Vec<FriendRequest>,
+    pub active_effects: Vec<ActiveEffect>
 }
 
 #[derive(Serialize, Debug, Deserialize)]
@@ -100,4 +101,26 @@ pub struct FriendRequest {
     pub user_one: Uuid,
     pub user_two: Uuid,
     pub request_sender_id: Uuid,
+}
+
+#[derive(Serialize, Debug, Deserialize, FromRow)]
+pub struct ActiveEffect {
+    pub item_id: i32,
+    pub expiry_time: DateTime<Utc>,
+}
+
+/// Request body for adding an active effect
+#[derive(Debug, Serialize, Deserialize, ToSchema)]
+pub struct AddActiveEffectRequest {
+    pub user_id: Uuid,
+    pub item_id: i32,
+    #[schema(value_type = String, format = DateTime)]
+    pub expiry_time: DateTime<Utc>,
+}
+
+/// Request body for removing an active effect
+#[derive(Debug, Serialize, Deserialize, ToSchema)]
+pub struct RemoveActiveEffectRequest {
+    pub user_id: Uuid,
+    pub item_id: i32,
 }
