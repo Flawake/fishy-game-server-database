@@ -1,0 +1,16 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "INSERT INTO player_effects (user_id, item_id, expiry_time)\n            VALUES ($1, $2, $3)\n            ON CONFLICT (user_id, item_id) \n            DO UPDATE SET expiry_time = EXCLUDED.expiry_time",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Uuid",
+        "Int4",
+        "Timestamptz"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "be2f13b77bf77e44b20434e23fdfadeb78e20bbb19fa5d9dcf28ac0b0b8f4110"
+}

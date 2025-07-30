@@ -2,7 +2,7 @@ use rocket::async_trait;
 use sqlx::PgPool;
 use uuid::Uuid;
 
-use crate::domain::{FishData, Friend, FriendRequest, InventoryItem, MailEntry, UserData};
+use crate::domain::{ActiveEffect, FishData, Friend, FriendRequest, InventoryItem, MailEntry, UserData};
 
 
 #[async_trait]
@@ -85,7 +85,17 @@ impl DataRepository for DataRepositoryImpl {
                     FROM friend_requests fr
                     WHERE fr.user_one_id = $1 OR fr.user_two_id = $1
                 ), '[]'
-            ) AS friend_requests
+            ) AS friend_requests,
+            COALESCE(
+                (
+                    SELECT json_agg(json_build_object(
+                        'item_id', ae.item_id,
+                        'expiry_time', ae.expiry_time
+                    ))
+                    FROM player_effects ae
+                    WHERE ae.user_id = $1 AND ae.expiry_time > NOW()
+                ), '[]'
+            ) AS player_effects
             FROM users u
             LEFT JOIN stats s ON u.user_id = s.user_id
             LEFT JOIN fish_caught fc ON u.user_id = fc.user_id
@@ -156,6 +166,14 @@ impl DataRepository for DataRepositoryImpl {
                     return Err(sqlx::Error::WorkerCrashed);
                 }
             };
+
+            let active_effects: Vec<ActiveEffect> = match serde_json::from_value(data.player_effects.unwrap_or_default()) {
+                Ok(o) => o,
+                Err(e) => {
+                    dbg!(&e);
+                    return Err(sqlx::Error::WorkerCrashed);
+                }
+            };
         
             let user_data = UserData {
                 name: data.name,
@@ -170,6 +188,7 @@ impl DataRepository for DataRepositoryImpl {
                 mailbox,
                 friends,
                 friend_requests,
+                active_effects,
             };
         
             return Ok(Some(user_data));
