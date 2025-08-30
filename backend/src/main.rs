@@ -104,6 +104,7 @@ async fn main() -> Result<(), rocket::Error> {
     // export SECRET_KEY="My secret key :)"
     // ```
     // the program will panic if these are not set.
+    println!("Starting backend...");
     dotenv().ok();
     let database_url = env::var("DATABASE_URL").expect("DATABASE_URL must be set");
     let secret_key = env::var("SECRET_KEY").expect("SECRET_KEY must be set for generating JWT");
