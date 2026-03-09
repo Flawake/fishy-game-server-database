@@ -84,7 +84,6 @@ async fn add_or_update_item(
     }
 }
 
-
 // Combine all the inventory routes.
 pub fn inventory_routes() -> Vec<rocket::Route> {
     routes![destroy_item, add_or_update_item]

@@ -171,8 +171,10 @@ async fn main() -> Result<(), rocket::Error> {
         inventory_repository.clone(),
     ));
 
-    let effects_service: Arc<dyn EffectsService> =
-        Arc::new(EffectsServiceImpl::new(db.clone(), effects_repository.clone()));
+    let effects_service: Arc<dyn EffectsService> = Arc::new(EffectsServiceImpl::new(
+        db.clone(),
+        effects_repository.clone(),
+    ));
 
     let shop_service: Arc<dyn ShopService> = Arc::new(ShopServiceImpl::new(
         db.clone(),

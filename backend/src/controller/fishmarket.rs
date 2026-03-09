@@ -1,6 +1,6 @@
 use std::sync::Arc;
 
-use rocket::{State, post, routes, serde::json::Json};
+use rocket::{post, routes, serde::json::Json, State};
 use serde::{Deserialize, Serialize};
 use utoipa::ToSchema;
 use uuid::Uuid;
@@ -38,7 +38,10 @@ pub async fn sell_fishes(
     fishmarket_service: &State<Arc<dyn FishmarketService>>,
 ) -> Json<bool> {
     let inner = payload.into_inner();
-    match fishmarket_service.sell_fishes(inner.seller_id, inner.fishes, inner.price).await {
+    match fishmarket_service
+        .sell_fishes(inner.seller_id, inner.fishes, inner.price)
+        .await
+    {
         Ok(_) => Json(true),
         Err(e) => {
             eprintln!("Error selling fishes: {:?}", e);
@@ -48,7 +51,5 @@ pub async fn sell_fishes(
 }
 
 pub fn routes() -> Vec<rocket::Route> {
-    routes![
-        sell_fishes,
-    ]
+    routes![sell_fishes,]
 }

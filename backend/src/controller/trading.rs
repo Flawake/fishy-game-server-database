@@ -1,6 +1,6 @@
 use std::sync::Arc;
 
-use rocket::{State, post, routes, serde::json::Json};
+use rocket::{post, routes, serde::json::Json, State};
 use serde::{Deserialize, Serialize};
 use utoipa::ToSchema;
 use uuid::Uuid;
@@ -12,7 +12,6 @@ pub struct TradeItemRequest {
     pub item_uid: Uuid,
     pub item_id: i32,
     pub state_blob: String,
-
 }
 
 #[derive(Debug, Serialize, Deserialize, ToSchema)]
@@ -37,23 +36,27 @@ struct TradeRequest {
     description = "Remove and add traded items to the accuonts"
 )]
 #[post("/commit_trade", data = "<payload>")]
-async fn commit_trade(payload: Json<TradeRequest>, trade_service: &State<Arc<dyn TradeService>>) -> Json<bool> {
+async fn commit_trade(
+    payload: Json<TradeRequest>,
+    trade_service: &State<Arc<dyn TradeService>>,
+) -> Json<bool> {
     let inner = payload.into_inner();
-    match trade_service.commit_trade(
-        inner.user_one_id,
-        inner.user_two_id,
-        inner.user_one_receives,
-        inner.user_two_receives,
-        inner.user_one_bucks_received,
-        inner.user_two_bucks_received,
-    ).await {
+    match trade_service
+        .commit_trade(
+            inner.user_one_id,
+            inner.user_two_id,
+            inner.user_one_receives,
+            inner.user_two_receives,
+            inner.user_one_bucks_received,
+            inner.user_two_bucks_received,
+        )
+        .await
+    {
         Ok(()) => Json(true),
-        Err(_) => Json(false)
+        Err(_) => Json(false),
     }
 }
 
 pub fn trade_routes() -> Vec<rocket::Route> {
-    routes![
-        commit_trade,
-    ]
+    routes![commit_trade,]
 }

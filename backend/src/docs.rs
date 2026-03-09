@@ -1,13 +1,13 @@
 use crate::controller::authentication::*;
 use crate::controller::data::*;
 use crate::controller::effects::*;
-use crate::controller::friends::*;
 use crate::controller::fishmarket::*;
+use crate::controller::friends::*;
 use crate::controller::inventory::*;
 use crate::controller::mail::*;
+use crate::controller::shop::*;
 use crate::controller::stats::*;
 use crate::controller::user::*;
-use crate::controller::shop::*;
 use utoipa::OpenApi;
 
 #[derive(OpenApi)]
