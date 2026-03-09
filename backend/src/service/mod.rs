@@ -8,4 +8,5 @@ pub mod inventory;
 pub mod mail;
 pub mod shop;
 pub mod stats;
+pub mod trading;
 pub mod user;
