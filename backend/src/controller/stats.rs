@@ -75,12 +75,16 @@ async fn add_fish(
     stats_service: &State<Arc<dyn StatsService>>,
 ) -> Json<bool> {
     match stats_service
-        .add_fish(payload.user_id, StatFish {
-            fish_id: payload.fish_id,
-            length: payload.length,
-            bait_id: payload.bait_id,
-            area_id: payload.area_id,
-        }, payload.xp_earned)
+        .add_fish(
+            payload.user_id,
+            StatFish {
+                fish_id: payload.fish_id,
+                length: payload.length,
+                bait_id: payload.bait_id,
+                area_id: payload.area_id,
+            },
+            payload.xp_earned,
+        )
         .await
     {
         Ok(()) => Json(true),
@@ -121,9 +125,5 @@ async fn select_item(
 
 // Combine all the user routes.
 pub fn stats_routes() -> Vec<rocket::Route> {
-    routes![
-        add_playtime,
-        add_fish,
-        select_item
-    ]
+    routes![add_playtime, add_fish, select_item]
 }

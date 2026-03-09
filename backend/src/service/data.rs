@@ -16,7 +16,10 @@ pub struct DataServiceImpl<U: DataRepository + Clone> {
 
 impl<U: DataRepository + Clone> DataServiceImpl<U> {
     pub fn new(db: DatabaseConnection, data_repository: U) -> Self {
-        Self { db, data_repository }
+        Self {
+            db,
+            data_repository,
+        }
     }
 }
 

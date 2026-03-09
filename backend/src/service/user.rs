@@ -21,11 +21,7 @@ pub trait UserService: Send + Sync {
 
     async fn retreive_username(&self, email: String) -> Result<bool, DbErr>;
 
-    async fn change_password(
-        &self,
-        name: String,
-        new_password: String,
-    ) -> Result<bool, DbErr>;
+    async fn change_password(&self, name: String, new_password: String) -> Result<bool, DbErr>;
 
     async fn from_uuid(&self, user_id: Uuid) -> Result<Option<User>, DbErr>;
 }
@@ -91,8 +87,19 @@ impl<
             .transaction::<_, LoginResponse, DbErr>(|tx| {
                 Box::pin(async move {
                     user_repo.insert_new_user(tx, &user).await?;
-                    stats_repo.insert_new_stats(tx, user.user_id, 25, 5000).await?;
-                    inventory_repo.insert_new_inventory(tx, user.user_id, 1000, String::from("AQABAAX2////"), 0, String::from("AQABAAX2////")).await?;
+                    stats_repo
+                        .insert_new_stats(tx, user.user_id, 25, 5000)
+                        .await?;
+                    inventory_repo
+                        .insert_new_inventory(
+                            tx,
+                            user.user_id,
+                            1000,
+                            String::from("AQABAAX2////"),
+                            0,
+                            String::from("AQABAAX2////"),
+                        )
+                        .await?;
                     Ok(LoginResponse {
                         code: 200,
                         jwt: generate_jwt(user_id, &secret_key).map_err(|e| DbErr::Custom(e))?,
@@ -124,11 +131,7 @@ impl<
         Ok(result.is_some())
     }
 
-    async fn change_password(
-        &self,
-        _name: String,
-        _new_password: String,
-    ) -> Result<bool, DbErr> {
+    async fn change_password(&self, _name: String, _new_password: String) -> Result<bool, DbErr> {
         Ok(false)
     }
 

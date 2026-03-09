@@ -41,7 +41,10 @@ pub struct MailServiceImpl<T: MailRepository + Clone> {
 impl<R: MailRepository + Clone> MailServiceImpl<R> {
     // create a new function for MailServiceImpl.
     pub fn new(db: DatabaseConnection, mail_repository: R) -> Self {
-        Self { db, mail_repository }
+        Self {
+            db,
+            mail_repository,
+        }
     }
 }
 
@@ -63,7 +66,15 @@ impl<R: MailRepository + Clone + 'static> MailService for MailServiceImpl<R> {
             .transaction::<_, (), DbErr>(move |tx| {
                 Box::pin(async move {
                     mail_repo
-                        .create_tx(tx, mail_id, sender_id, receiver_ids, title, message, send_time)
+                        .create_tx(
+                            tx,
+                            mail_id,
+                            sender_id,
+                            receiver_ids,
+                            title,
+                            message,
+                            send_time,
+                        )
                         .await
                 })
             })

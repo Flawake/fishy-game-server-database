@@ -88,8 +88,7 @@ impl<U: UserRepository + Clone + 'static> AuthenticationService for Authenticati
         match claims {
             Ok(claims) => {
                 let user_repo = self.user_repository.clone();
-                let user_id =
-                    Uuid::from_str(&claims.user_id).expect("Failed to generate uuid.");
+                let user_id = Uuid::from_str(&claims.user_id).expect("Failed to generate uuid.");
 
                 let user = self
                     .db

@@ -1,6 +1,7 @@
 use rocket::async_trait;
 use sea_orm::{
-    ActiveModelTrait, ActiveValue::Set, ColumnTrait, Condition, DatabaseTransaction, DbErr, EntityTrait, QueryFilter, sea_query::OnConflict
+    sea_query::OnConflict, ActiveModelTrait, ActiveValue::Set, ColumnTrait, Condition,
+    DatabaseTransaction, DbErr, EntityTrait, QueryFilter,
 };
 use uuid::Uuid;
 
@@ -24,7 +25,15 @@ pub trait InventoryRepository: Send + Sync {
         item_uid: Uuid,
     ) -> Result<(), DbErr>;
 
-    async fn insert_new_inventory(&self, tx: &DatabaseTransaction, user_id: Uuid, rod_id: i32, rod_state: String, bait_id: i32, bait_state: String) -> Result<(), DbErr>;
+    async fn insert_new_inventory(
+        &self,
+        tx: &DatabaseTransaction,
+        user_id: Uuid,
+        rod_id: i32,
+        rod_state: String,
+        bait_id: i32,
+        bait_state: String,
+    ) -> Result<(), DbErr>;
 }
 
 #[derive(Debug, Clone)]
@@ -86,11 +95,16 @@ impl InventoryRepository for InventoryRepositoryImpl {
         Ok(())
     }
 
-    async fn insert_new_inventory(&self, tx: &DatabaseTransaction, user_id: Uuid, rod_id: i32, rod_state: String, bait_id: i32, bait_state: String) -> Result<(), DbErr> {
-        let default_items = [
-            (rod_id, rod_state),
-            (bait_id, bait_state),
-        ];
+    async fn insert_new_inventory(
+        &self,
+        tx: &DatabaseTransaction,
+        user_id: Uuid,
+        rod_id: i32,
+        rod_state: String,
+        bait_id: i32,
+        bait_state: String,
+    ) -> Result<(), DbErr> {
+        let default_items = [(rod_id, rod_state), (bait_id, bait_state)];
 
         for (definition_id, state_blob) in default_items {
             inventory_item::ActiveModel {

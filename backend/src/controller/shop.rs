@@ -1,4 +1,4 @@
-use rocket::{State, post, routes, serde::json::Json};
+use rocket::{post, routes, serde::json::Json, State};
 use serde::{Deserialize, Serialize};
 use std::sync::Arc;
 use utoipa::ToSchema;
@@ -59,12 +59,10 @@ async fn buy_item(
         Err(e) => {
             println!("{}", e);
             Json(false)
-        },
+        }
     }
 }
 
 pub fn shop_routes() -> Vec<rocket::Route> {
-    routes![
-        buy_item,
-    ]
+    routes![buy_item,]
 }

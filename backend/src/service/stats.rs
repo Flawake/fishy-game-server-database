@@ -13,7 +13,12 @@ pub trait StatsService: Send + Sync {
 
     async fn add_playtime(&self, user_id: Uuid, amount: i32) -> Result<(), DbErr>;
 
-    async fn add_fish(&self, user_caught: Uuid, fish: StatFish, xp_earned: i32) -> Result<(), DbErr>;
+    async fn add_fish(
+        &self,
+        user_caught: Uuid,
+        fish: StatFish,
+        xp_earned: i32,
+    ) -> Result<(), DbErr>;
 
     async fn select_item(&self, select_item: SelectItemRequest) -> Result<(), DbErr>;
 }
@@ -26,7 +31,10 @@ pub struct StatsServiceImpl<T: StatsRepository> {
 impl<R: StatsRepository + Clone> StatsServiceImpl<R> {
     // create a new function for StatsServiceImpl.
     pub fn new(db: DatabaseConnection, stats_repository: R) -> Self {
-        Self { db, stats_repository }
+        Self {
+            db,
+            stats_repository,
+        }
     }
 }
 
@@ -61,7 +69,12 @@ impl<R: StatsRepository + Clone + 'static> StatsService for StatsServiceImpl<R> 
             })
     }
 
-    async fn add_fish(&self, user_caught: Uuid, fish: StatFish, xp_earned: i32) -> Result<(), DbErr> {
+    async fn add_fish(
+        &self,
+        user_caught: Uuid,
+        fish: StatFish,
+        xp_earned: i32,
+    ) -> Result<(), DbErr> {
         let stats_repo = self.stats_repository.clone();
 
         self.db
@@ -102,9 +115,7 @@ impl<R: StatsRepository + Clone + 'static> StatsService for StatsServiceImpl<R> 
 
                 self.db
                     .transaction::<_, (), DbErr>(move |tx| {
-                        Box::pin(async move {
-                            stats_repo.select_bait(tx, user_id, item_uid).await
-                        })
+                        Box::pin(async move { stats_repo.select_bait(tx, user_id, item_uid).await })
                     })
                     .await
                     .map_err(|e| match e {

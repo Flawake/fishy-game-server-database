@@ -79,7 +79,11 @@ impl StatsRepositoryImpl {
         Self
     }
 
-    async fn add_fish_caught(tx: &DatabaseTransaction, user_caught: Uuid, fish: &StatFish) -> Result<(), DbErr> {
+    async fn add_fish_caught(
+        tx: &DatabaseTransaction,
+        user_caught: Uuid,
+        fish: &StatFish,
+    ) -> Result<(), DbErr> {
         fish_caught::Entity::insert(fish_caught::ActiveModel {
             user_id: Set(user_caught),
             fish_id: Set(fish.fish_id),
@@ -174,7 +178,11 @@ impl StatsRepository for StatsRepositoryImpl {
                 stats::Column::Bucks,
                 Expr::col(stats::Column::Bucks).add(amount),
             )
-            .filter(stats::Column::UserId.eq(user_id))
+            .filter(
+                stats::Column::UserId
+                    .eq(user_id)
+                    .and(Expr::col(stats::Column::Bucks).add(amount).gte(0)),
+            )
             .exec(tx)
             .await?;
 
@@ -196,7 +204,11 @@ impl StatsRepository for StatsRepositoryImpl {
                 stats::Column::Coins,
                 Expr::col(stats::Column::Coins).add(amount),
             )
-            .filter(stats::Column::UserId.eq(user_id))
+            .filter(
+                stats::Column::UserId
+                    .eq(user_id)
+                    .and(Expr::col(stats::Column::Coins).add(amount).gte(0)),
+            )
             .exec(tx)
             .await?;
 
@@ -307,4 +319,3 @@ mod tests {
         println!("{}", stmt);
     }
 }
-
