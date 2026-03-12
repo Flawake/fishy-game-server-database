@@ -294,6 +294,8 @@ impl StatsRepository for StatsRepositoryImpl {
             user_id: Set(user_id),
             coins: Set(coins),
             bucks: Set(bucks),
+            xp: Set(0),
+            total_playtime: Set(0),
             ..Default::default()
         })
         .exec(tx)

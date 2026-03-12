@@ -1,6 +1,7 @@
 use crate::controller::authentication::authentication_routes;
 use crate::controller::shop::shop_routes;
 use crate::controller::stats::stats_routes;
+use crate::controller::trading::trade_routes;
 use crate::controller::user::*;
 use crate::docs::ApiDoc;
 use crate::domain::User;
@@ -9,6 +10,8 @@ use crate::repository::user::UserRepositoryImpl;
 use crate::service::authentication::*;
 use crate::service::shop::ShopService;
 use crate::service::shop::ShopServiceImpl;
+use crate::service::trading::TradeService;
+use crate::service::trading::TradeServiceImpl;
 use crate::service::user::UserService;
 use crate::service::user::UserServiceImpl;
 use crate::AuthenticationService;
@@ -182,6 +185,12 @@ async fn main() -> Result<(), rocket::Error> {
         inventory_repository.clone(),
     ));
 
+    let trade_service: Arc<dyn TradeService> = Arc::new(TradeServiceImpl::new(
+        db.clone(),
+        inventory_repository.clone(),
+        stats_repository.clone(),
+    ));
+
     // Add here more repositories and services when your backend grows.
 
     // Set rocket configuration.
@@ -208,6 +217,7 @@ async fn main() -> Result<(), rocket::Error> {
         .manage(friend_service)
         .manage(effects_service)
         .manage(shop_service)
+        .manage(trade_service)
         // expose swagger ui.
         // Go to http://localhost:8000/docs to view your endpoint documentation.
         .mount(
@@ -224,6 +234,7 @@ async fn main() -> Result<(), rocket::Error> {
         .mount("/friend", friend_routes())
         .mount("/effects", effects_routes())
         .mount("/shop", shop_routes())
+        .mount("/trade", trade_routes())
         .attach(cors)
         .launch()
         .await?;
