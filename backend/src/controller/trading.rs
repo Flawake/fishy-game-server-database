@@ -58,5 +58,5 @@ async fn commit_trade(
 }
 
 pub fn trade_routes() -> Vec<rocket::Route> {
-    routes![commit_trade,]
+    routes![commit_trade]
 }

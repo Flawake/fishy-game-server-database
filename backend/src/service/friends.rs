@@ -71,8 +71,14 @@ impl<U: FriendRepository + Clone + 'static> FriendService for FriendServiceImpl<
         self.db
             .transaction::<_, (), DbErr>(move |tx| {
                 Box::pin(async move {
+                        let (u1, u2) = if user_one_id < user_two_id {
+                            (user_one_id, user_two_id)
+                        } else {
+                            (user_two_id, user_one_id)
+                        };
+
                     friend_repo
-                        .add_friend_request(tx, user_one_id, user_two_id, sender, Utc::now())
+                        .add_friend_request(tx, u1, u2, sender, Utc::now())
                         .await?;
 
                     Ok(())
@@ -99,7 +105,13 @@ impl<U: FriendRepository + Clone + 'static> FriendService for FriendServiceImpl<
                         .remove_friend_request(tx, user_one_id, user_two_id)
                         .await?;
                     if accepted {
-                        friend_repo.add_friend(tx, user_one_id, user_two_id).await?;
+                        let (u1, u2) = if user_one_id < user_two_id {
+                            (user_one_id, user_two_id)
+                        } else {
+                            (user_two_id, user_one_id)
+                        };
+
+                        friend_repo.add_friend(tx, u1, u2).await?;
                     }
 
                     Ok(())
