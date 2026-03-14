@@ -11,6 +11,7 @@ use crate::service::trading::TradeService;
 pub struct TradeItemRequest {
     pub item_uid: Uuid,
     pub item_id: i32,
+    pub item_amount: i32,
     pub state_blob: String,
 }
 
