@@ -7,7 +7,7 @@ use chrono::{DateTime, Utc};
 use rocket::async_trait;
 use sea_orm::{
     ActiveValue::Set, ColumnTrait, DatabaseTransaction, DbErr, EntityTrait, Order, QueryFilter,
-    QueryOrder, ActiveModelTrait, QuerySelect, PaginatorTrait,
+    QueryOrder, ActiveModelTrait, QuerySelect, PaginatorTrait, prelude::Expr,
 };
 use sea_orm::sea_query::OnConflict;
 use uuid::Uuid;
@@ -44,6 +44,21 @@ pub trait CompetitionsRepository: Send + Sync {
     
     /// Update competition status
     async fn update_competition_status(&self, tx: &DatabaseTransaction, competition_id: Uuid, status: String) -> Result<(), DbErr>;
+
+    /// Activate competitions that have started but are still marked as SCHEDULED
+    async fn activate_due_competitions(&self, tx: &DatabaseTransaction, now: DateTime<Utc>) -> Result<u64, DbErr>;
+
+    /// Get the next ACTIVE competition that has already ended
+    async fn get_next_ended_active_competition(&self, tx: &DatabaseTransaction, now: DateTime<Utc>) -> Result<Option<Competition>, DbErr>;
+
+    /// Update status only if the current status matches expected value
+    async fn update_competition_status_if_current(
+        &self,
+        tx: &DatabaseTransaction,
+        competition_id: Uuid,
+        expected_status: String,
+        new_status: String,
+    ) -> Result<bool, DbErr>;
     
     /// Count competitions by status
     async fn count_competitions_by_status(&self, tx: &DatabaseTransaction, status: String) -> Result<i64, DbErr>;
@@ -211,6 +226,58 @@ impl CompetitionsRepository for CompetitionsRepositoryImpl {
         active.update(tx).await?;
 
         Ok(())
+    }
+
+    async fn activate_due_competitions(&self, tx: &DatabaseTransaction, now: DateTime<Utc>) -> Result<u64, DbErr> {
+        let result = competitions::Entity::update_many()
+            .col_expr(
+                competitions::Column::Status,
+                Expr::value("ACTIVE".to_string()),
+            )
+            .filter(competitions::Column::Status.eq("SCHEDULED"))
+            .filter(competitions::Column::StartTime.lte(now.fixed_offset()))
+            .exec(tx)
+            .await?;
+
+        Ok(result.rows_affected)
+    }
+
+    async fn get_next_ended_active_competition(&self, tx: &DatabaseTransaction, now: DateTime<Utc>) -> Result<Option<Competition>, DbErr> {
+        let model = competitions::Entity::find()
+            .filter(competitions::Column::Status.eq("ACTIVE"))
+            .filter(competitions::Column::EndTime.lte(now.fixed_offset()))
+            .order_by(competitions::Column::EndTime, Order::Asc)
+            .one(tx)
+            .await?;
+
+        Ok(model.map(|m| Competition {
+            competition_id: m.competition_id,
+            competition_type: convert_type_to_string(m.competition_type),
+            target_fish_id: m.target_fish_id,
+            start_time: m.start_time.with_timezone(&Utc),
+            end_time: m.end_time.with_timezone(&Utc),
+            reward_currency: m.reward_currency,
+            prize_pool: m.prize_pool,
+            created_at: m.created_at.with_timezone(&Utc),
+            status: m.status,
+        }))
+    }
+
+    async fn update_competition_status_if_current(
+        &self,
+        tx: &DatabaseTransaction,
+        competition_id: Uuid,
+        expected_status: String,
+        new_status: String,
+    ) -> Result<bool, DbErr> {
+        let result = competitions::Entity::update_many()
+            .col_expr(competitions::Column::Status, Expr::value(new_status))
+            .filter(competitions::Column::CompetitionId.eq(competition_id))
+            .filter(competitions::Column::Status.eq(expected_status))
+            .exec(tx)
+            .await?;
+
+        Ok(result.rows_affected > 0)
     }
 
     async fn count_competitions_by_status(&self, tx: &DatabaseTransaction, status: String) -> Result<i64, DbErr> {

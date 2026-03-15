@@ -7,7 +7,7 @@ use uuid::Uuid;
 
 use crate::{
     domain::{Competition, CompetitionResult, LeaderboardResponse, SubmitScoreRequest},
-    repository::competitions::CompetitionsRepository,
+    repository::{competitions::CompetitionsRepository, stats::StatsRepository},
 };
 
 /// Competition type enum for type safety
@@ -62,6 +62,7 @@ struct CompetitionTemplate {
 /// Get the predefined list of possible competitions
 /// These are hand-picked to ensure fish are catchable and competitions are interesting
 fn get_competition_templates() -> Vec<CompetitionTemplate> {
+    // TODO: Some competitions cannot be completed yet. Fish targets need to be adjusted.
     vec![
         // MostFish competitions
         CompetitionTemplate { competition_type: CompetitionType::MostFish, target_fish_id: 1, description: "Catch the most Common Fish" },
@@ -167,24 +168,30 @@ pub trait CompetitionsService: Send + Sync {
     async fn submit_score(&self, request: SubmitScoreRequest) -> Result<(), DbErr>;
     
     async fn generate_competitions_if_needed(&self) -> Result<Vec<Competition>, DbErr>;
+
+    /// Activates due competitions and distributes prizes for ended competitions.
+    /// Returns (activated_count, rewarded_competitions_count).
+    async fn process_competition_lifecycle(&self) -> Result<(u64, u64), DbErr>;
 }
 
-pub struct CompetitionsServiceImpl<T: CompetitionsRepository> {
+pub struct CompetitionsServiceImpl<T: CompetitionsRepository, S: StatsRepository> {
     db: DatabaseConnection,
     competitions_repository: T,
+    stats_repository: S,
 }
 
-impl<R: CompetitionsRepository> CompetitionsServiceImpl<R> {
-    pub fn new(db: DatabaseConnection, competitions_repository: R) -> Self {
+impl<R: CompetitionsRepository, S: StatsRepository> CompetitionsServiceImpl<R, S> {
+    pub fn new(db: DatabaseConnection, competitions_repository: R, stats_repository: S) -> Self {
         Self {
             db,
             competitions_repository,
+            stats_repository,
         }
     }
 }
 
 #[async_trait]
-impl<R: CompetitionsRepository + Clone + 'static> CompetitionsService for CompetitionsServiceImpl<R> {
+impl<R: CompetitionsRepository + Clone + 'static, S: StatsRepository + Clone + 'static> CompetitionsService for CompetitionsServiceImpl<R, S> {
     async fn get_active_competition(&self) -> Result<Option<Competition>, DbErr> {
         let repo = self.competitions_repository.clone();
         
@@ -398,6 +405,91 @@ impl<R: CompetitionsRepository + Clone + 'static> CompetitionsService for Compet
                     }
 
                     Ok(new_competitions)
+                })
+            })
+            .await
+            .map_err(|e| match e {
+                TransactionError::Connection(e) => e,
+                TransactionError::Transaction(e) => e,
+            })
+    }
+
+    async fn process_competition_lifecycle(&self) -> Result<(u64, u64), DbErr> {
+        let repo = self.competitions_repository.clone();
+        let stats_repo = self.stats_repository.clone();
+
+        self.db
+            .transaction::<_, (u64, u64), DbErr>(move |tx| {
+                Box::pin(async move {
+                    let now = Utc::now();
+
+                    // Promote competitions that should have started.
+                    let activated_count = repo.activate_due_competitions(tx, now).await?;
+
+                    // Process ended ACTIVE competitions one by one.
+                    let mut rewarded_competitions_count = 0u64;
+
+                    loop {
+                        let maybe_competition = repo
+                            .get_next_ended_active_competition(tx, now)
+                            .await?;
+
+                        let Some(competition) = maybe_competition else {
+                            break;
+                        };
+
+                        // Claim this competition by transitioning ACTIVE -> COMPLETED.
+                        // If this fails, it was already processed by another worker.
+                        let claimed = repo
+                            .update_competition_status_if_current(
+                                tx,
+                                competition.competition_id,
+                                "ACTIVE".to_string(),
+                                "COMPLETED".to_string(),
+                            )
+                            .await?;
+
+                        if !claimed {
+                            continue;
+                        }
+
+                        let leaderboard = repo
+                            .get_competition_results(tx, competition.competition_id)
+                            .await?;
+
+                        for (rank_idx, result) in leaderboard.iter().enumerate() {
+                            let Some(prize_amount) = competition.prize_pool.get(rank_idx) else {
+                                break;
+                            };
+
+                            if *prize_amount <= 0 {
+                                continue;
+                            }
+
+                            match competition.reward_currency.as_str() {
+                                "COINS" => {
+                                    stats_repo
+                                        .change_coins_tx(tx, result.player_id, *prize_amount)
+                                        .await?;
+                                }
+                                "BUCKS" => {
+                                    stats_repo
+                                        .change_bucks_tx(tx, result.player_id, *prize_amount)
+                                        .await?;
+                                }
+                                _ => {
+                                    return Err(DbErr::Custom(format!(
+                                        "Unknown competition currency: {}",
+                                        competition.reward_currency
+                                    )));
+                                }
+                            }
+                        }
+
+                        rewarded_competitions_count += 1;
+                    }
+
+                    Ok((activated_count, rewarded_competitions_count))
                 })
             })
             .await

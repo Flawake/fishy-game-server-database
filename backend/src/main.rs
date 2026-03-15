@@ -186,7 +186,11 @@ async fn main() -> Result<(), rocket::Error> {
     ));
 
     let competitions_service: Arc<dyn CompetitionsService> = Arc::new(
-        CompetitionsServiceImpl::new(db.clone(), competitions_repository.clone())
+        CompetitionsServiceImpl::new(
+            db.clone(),
+            competitions_repository.clone(),
+            stats_repository.clone(),
+        )
     );
 
     CompetitionScheduler::new(competitions_service.clone()).start();
