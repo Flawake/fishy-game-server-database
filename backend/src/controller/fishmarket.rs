@@ -11,7 +11,8 @@ use crate::service::fishmarket::FishmarketService;
 pub struct FishToSell {
     pub fish_uid: Uuid,
     pub fish_id: i32,
-    pub new_state_blob: Option<String>,
+    pub fish_amount: i32,
+    pub new_state_blob: String,
 }
 
 /// Request body for selling a fish

@@ -230,7 +230,7 @@ impl StatsRepository for StatsRepositoryImpl {
                 stats::Column::TotalPlaytime,
                 Expr::col(stats::Column::TotalPlaytime).add(amount),
             )
-            .filter(stats::Column::Coins.eq(user_id))
+            .filter(stats::Column::UserId.eq(user_id))
             .exec(tx)
             .await?;
 

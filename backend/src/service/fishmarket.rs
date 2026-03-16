@@ -50,20 +50,19 @@ impl<S: StatsRepository + Clone + 'static, I: InventoryRepository + Clone + 'sta
             .transaction::<_, (), DbErr>(move |tx| {
                 Box::pin(async move {
                     for fish in fishes {
-                        match fish.new_state_blob {
-                            Some(state_blob) => {
-                                inventory_repo
-                                    .add_or_update_tx(
-                                        tx,
-                                        seller_id,
-                                        fish.fish_uid,
-                                        fish.fish_id,
-                                        state_blob,
-                                    )
-                                    .await
-                            }
-                            None => inventory_repo.destroy(tx, seller_id, fish.fish_uid).await,
-                        }?;
+                        if fish.fish_amount <= 0 {
+                            inventory_repo.destroy(tx, seller_id, fish.fish_uid).await?;
+                        } else {
+                            inventory_repo
+                                .add_or_update_tx(
+                                    tx,
+                                    seller_id,
+                                    fish.fish_uid,
+                                    fish.fish_id,
+                                    fish.new_state_blob,
+                                )
+                                .await?;
+                        }
                     }
                     stats_repo
                         .change_bucks_tx(tx, seller_id, earned_money)
