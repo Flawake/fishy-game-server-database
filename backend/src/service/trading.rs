@@ -75,10 +75,9 @@ impl<I: InventoryRepository + Clone + 'static, S: StatsRepository + Clone + 'sta
                     let mut tasks = FuturesUnordered::new();
 
                     for item in user_one_receives {
-                        if item.item_amount == 0 {
+                        if item.item_amount <= 0 {
                             tasks.push(inventory_repo.destroy(tx, user_one_id, item.item_uid));
-                        }
-                        else {
+                        } else {
                             tasks.push(inventory_repo.add_or_update_tx(
                                 tx,
                                 user_one_id,
@@ -90,10 +89,9 @@ impl<I: InventoryRepository + Clone + 'static, S: StatsRepository + Clone + 'sta
                     }
 
                     for item in user_two_receives {
-                        if item.item_amount == 0 {
+                        if item.item_amount <= 0 {
                             tasks.push(inventory_repo.destroy(tx, user_two_id, item.item_uid));
-                        }
-                        else {
+                        } else {
                             tasks.push(inventory_repo.add_or_update_tx(
                                 tx,
                                 user_two_id,
