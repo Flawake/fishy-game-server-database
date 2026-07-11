@@ -1,4 +1,5 @@
 use crate::controller::authentication::authentication_routes;
+use crate::controller::herb_quest::herb_quest_routes;
 use crate::controller::shop::shop_routes;
 use crate::controller::stats::stats_routes;
 use crate::controller::trading::trade_routes;
@@ -24,6 +25,7 @@ use dotenv::dotenv;
 use repository::data::DataRepositoryImpl;
 use repository::effects::EffectsRepositoryImpl;
 use repository::inventory::InventoryRepositoryImpl;
+use repository::herb_quest::HerbQuestRepositoryImpl;
 use repository::mail::MailRepositoryImpl;
 use repository::stats::StatsRepositoryImpl;
 use rocket::http::Status;
@@ -44,6 +46,8 @@ use service::friends::FriendService;
 use service::friends::FriendServiceImpl;
 use service::inventory::InventoryService;
 use service::inventory::InventoryServiceImpl;
+use service::herb_quest::HerbQuestService;
+use service::herb_quest::HerbQuestServiceImpl;
 use service::mail::MailService;
 use service::mail::MailServiceImpl;
 use service::stats::StatsService;
@@ -60,6 +64,7 @@ pub mod controller;
 pub mod docs;
 pub mod domain;
 pub mod entity;
+pub mod fish_catalog;
 pub mod repository;
 pub mod service;
 pub mod utils;
@@ -142,6 +147,7 @@ async fn main() -> Result<(), rocket::Error> {
     let stats_repository = StatsRepositoryImpl::new();
     let mail_repository = MailRepositoryImpl::new();
     let inventory_repository = InventoryRepositoryImpl::new();
+    let herb_quest_repository = HerbQuestRepositoryImpl::new();
 
     let user_service: Arc<dyn UserService> = Arc::new(UserServiceImpl::new(
         db.clone(),
@@ -191,6 +197,33 @@ async fn main() -> Result<(), rocket::Error> {
         stats_repository.clone(),
     ));
 
+    let herb_quest_service: Arc<dyn HerbQuestService> = Arc::new(HerbQuestServiceImpl::new(
+        db.clone(),
+        herb_quest_repository.clone(),
+        inventory_repository.clone(),
+        stats_repository.clone(),
+    ));
+
+    // Background scheduler that owns Herb's daily quest. It makes sure a valid quest
+    // exists on boot and then rolls Herb over to a fresh quest every day at 04:00 UTC.
+    let scheduler_service = herb_quest_service.clone();
+    tokio::spawn(async move {
+        if let Err(e) = scheduler_service.ensure_quest_on_boot().await {
+            eprintln!("[HerbQuest] Failed to ensure a quest on boot: {:?}", e);
+        }
+        loop {
+            let next = service::herb_quest::next_rollover(chrono::Utc::now());
+            let sleep_duration = (next - chrono::Utc::now())
+                .to_std()
+                .unwrap_or(std::time::Duration::from_secs(0));
+            tokio::time::sleep(sleep_duration).await;
+
+            if let Err(e) = scheduler_service.roll_over_quest().await {
+                eprintln!("[HerbQuest] Failed to roll over quest: {:?}", e);
+            }
+        }
+    });
+
     // Add here more repositories and services when your backend grows.
 
     // Set rocket configuration.
@@ -218,6 +251,7 @@ async fn main() -> Result<(), rocket::Error> {
         .manage(effects_service)
         .manage(shop_service)
         .manage(trade_service)
+        .manage(herb_quest_service)
         // expose swagger ui.
         // Go to http://localhost:8000/docs to view your endpoint documentation.
         .mount(
@@ -235,6 +269,7 @@ async fn main() -> Result<(), rocket::Error> {
         .mount("/effects", effects_routes())
         .mount("/shop", shop_routes())
         .mount("/trade", trade_routes())
+        .mount("/herb_quest", herb_quest_routes())
         .attach(cors)
         .launch()
         .await?;

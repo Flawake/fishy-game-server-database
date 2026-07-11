@@ -3,6 +3,7 @@ use crate::controller::data::*;
 use crate::controller::effects::*;
 use crate::controller::fishmarket::*;
 use crate::controller::friends::*;
+use crate::controller::herb_quest::*;
 use crate::controller::inventory::*;
 use crate::controller::mail::*;
 use crate::controller::shop::*;
@@ -32,5 +33,8 @@ use utoipa::OpenApi;
     cleanup_all_expired_effects,
     retreive_player_data,
     buy_item,
+    current_daily_quest,
+    complete_daily_quest,
+    accept_daily_quest,
 ))]
 pub struct ApiDoc;

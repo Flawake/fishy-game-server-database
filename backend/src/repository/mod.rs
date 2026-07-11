@@ -2,6 +2,7 @@
 pub mod data;
 pub mod effects;
 pub mod friends;
+pub mod herb_quest;
 pub mod inventory;
 pub mod mail;
 pub mod stats;

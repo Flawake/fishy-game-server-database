@@ -2,8 +2,8 @@ use crate::domain::{
     ActiveEffect, FishData, Friend, FriendRequest, InventoryItem, MailEntry, UserData,
 };
 use crate::entity::{
-    fish_caught, fish_caught_area, fish_caught_bait, friend_requests, friends, inventory_item,
-    mail, mailbox, player_effects, stats, users,
+    fish_caught, fish_caught_area, fish_caught_bait, friend_requests, friends,
+    herb_quest_player_state, inventory_item, mail, mailbox, player_effects, stats, users,
 };
 use chrono::Utc;
 use rocket::async_trait;
@@ -241,6 +241,21 @@ impl DataRepositoryImpl {
             .await
     }
 
+    /// Returns (last_completed_herb_quest_id, last_accepted_herb_quest_id) for the user.
+    async fn fetch_herb_quest_state(
+        tx: &DatabaseTransaction,
+        user_id: Uuid,
+    ) -> Result<(Option<Uuid>, Option<Uuid>), DbErr> {
+        let row = herb_quest_player_state::Entity::find_by_id(user_id)
+            .one(tx)
+            .await?;
+
+        Ok(match row {
+            Some(state) => (state.last_completed_quest_id, state.last_accepted_quest_id),
+            None => (None, None),
+        })
+    }
+
     async fn fetch_active_effects(
         tx: &DatabaseTransaction,
         user_id: Uuid,
@@ -289,6 +304,8 @@ impl DataRepository for DataRepositoryImpl {
         let friends = Self::fetch_friends(tx, user_id).await?;
         let friend_requests = Self::fetch_friend_requests(tx, user_id).await?;
         let active_effects = Self::fetch_active_effects(tx, user_id).await?;
+        let (last_completed_herb_quest_id, last_accepted_herb_quest_id) =
+            Self::fetch_herb_quest_state(tx, user_id).await?;
 
         Ok(Some(UserData {
             name,
@@ -304,6 +321,8 @@ impl DataRepository for DataRepositoryImpl {
             friends,
             friend_requests,
             active_effects,
+            last_completed_herb_quest_id,
+            last_accepted_herb_quest_id,
         }))
     }
 }
