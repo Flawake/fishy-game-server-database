@@ -61,6 +61,10 @@ pub struct UserData {
     pub friends: Vec<Friend>,
     pub friend_requests: Vec<FriendRequest>,
     pub active_effects: Vec<ActiveEffect>,
+    /// Id of the last Herb quest the player completed (null when never completed).
+    pub last_completed_herb_quest_id: Option<Uuid>,
+    /// Id of the last Herb quest the player accepted/saw (null when never accepted).
+    pub last_accepted_herb_quest_id: Option<Uuid>,
 }
 
 #[derive(Serialize, Debug, Deserialize)]

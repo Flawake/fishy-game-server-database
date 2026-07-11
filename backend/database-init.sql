@@ -96,3 +96,33 @@ CREATE TABLE player_effects (
 CREATE INDEX idx_player_effects_expiry ON player_effects(expiry_time);
 CREATE INDEX idx_player_effects_user_id ON player_effects(user_id);
 
+-- The single, globally shared daily quest of Herb. The database is the source of truth:
+-- it is generated/rolled over here (see the scheduler in main.rs) and only read by the game.
+-- Only ever the current quest is kept; a rollover replaces the row (and its fishes).
+CREATE TABLE herb_quest (
+    quest_id UUID PRIMARY KEY,
+    -- Area enum value (see Area.cs in the game) Herb stands in / the fishes are caught in.
+    area_id INTEGER NOT NULL,
+    -- Fishcoins paid for handing the quest in (1 coin per requested fish).
+    reward_coins INTEGER NOT NULL,
+    -- When the quest rolls over to the next one (Herb's next move), in UTC.
+    next_move_at TIMESTAMPTZ NOT NULL,
+    created_at TIMESTAMPTZ NOT NULL
+);
+
+-- The fishes (species + amount) the current Herb quest asks for.
+CREATE TABLE herb_quest_fish (
+    quest_id UUID NOT NULL REFERENCES herb_quest(quest_id) ON DELETE CASCADE,
+    fish_id INTEGER NOT NULL,
+    amount INTEGER NOT NULL,
+    PRIMARY KEY (quest_id, fish_id)
+);
+
+-- Per-player Herb quest progress. Tracks which quest the player last accepted (saw) and
+-- last completed, both by quest UUID. Used to skip Herb's intro and to block double hand-ins.
+CREATE TABLE herb_quest_player_state (
+    user_id UUID PRIMARY KEY REFERENCES users(user_id),
+    last_completed_quest_id UUID,
+    last_accepted_quest_id UUID
+);
+

@@ -22,6 +22,8 @@ pub struct Model {
     #[sea_orm(has_many)]
     pub player_effects: HasMany<super::player_effects::Entity>,
     #[sea_orm(has_one)]
+    pub herb_quest_player_state: HasOne<super::herb_quest_player_state::Entity>,
+    #[sea_orm(has_one)]
     pub stats: HasOne<super::stats::Entity>,
     #[sea_orm(has_many, via = "mailbox")]
     pub mail: HasMany<super::mail::Entity>,
