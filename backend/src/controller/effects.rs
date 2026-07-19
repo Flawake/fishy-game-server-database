@@ -22,7 +22,7 @@ pub struct RemoveExpiredEffectRequest {
         (status = 500, description = "Internal server error")
     )
 )]
-#[post("/add_effect", data = "<add_request>")]
+#[post("/add_active_effect", data = "<add_request>")]
 pub async fn add_effect(
     add_request: Json<AddActiveEffectRequest>,
     effects_service: &State<Arc<dyn EffectsService>>,
