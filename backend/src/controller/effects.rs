@@ -14,7 +14,7 @@ pub struct RemoveExpiredEffectRequest {
 
 #[utoipa::path(
     post,
-    path = "/effects/add_active_effect",
+    path = "/effects/add_effect",
     request_body = AddActiveEffectRequest,
     responses(
         (status = 200, description = "Effect added successfully", body = bool),
@@ -22,7 +22,7 @@ pub struct RemoveExpiredEffectRequest {
         (status = 500, description = "Internal server error")
     )
 )]
-#[post("/add_active_effect", data = "<add_request>")]
+#[post("/add_effect", data = "<add_request>")]
 pub async fn add_effect(
     add_request: Json<AddActiveEffectRequest>,
     effects_service: &State<Arc<dyn EffectsService>>,
