@@ -9,6 +9,8 @@ use crate::domain::User;
 use crate::repository::friends::FriendRepositoryImpl;
 use crate::repository::user::UserRepositoryImpl;
 use crate::service::authentication::*;
+use crate::service::fishmarket::FishmarketService;
+use crate::service::fishmarket::FishmarketServiceImpl;
 use crate::service::shop::ShopService;
 use crate::service::shop::ShopServiceImpl;
 use crate::service::trading::TradeService;
@@ -164,6 +166,13 @@ async fn main() -> Result<(), rocket::Error> {
     let data_service: Arc<dyn DataService> =
         Arc::new(DataServiceImpl::new(db.clone(), data_repository.clone()));
 
+    let fish_market_service: Arc<dyn FishmarketService> =
+        Arc::new(FishmarketServiceImpl::new(
+        db.clone(),
+        stats_repository.clone(),
+        inventory_repository.clone()
+    ));
+
     let friend_service: Arc<dyn FriendService> = Arc::new(FriendServiceImpl::new(
         db.clone(),
         friends_repository.clone(),
@@ -247,6 +256,7 @@ async fn main() -> Result<(), rocket::Error> {
         .manage(mail_service)
         .manage(inventory_service)
         .manage(data_service)
+        .manage(fish_market_service)
         .manage(friend_service)
         .manage(effects_service)
         .manage(shop_service)
@@ -265,6 +275,7 @@ async fn main() -> Result<(), rocket::Error> {
         .mount("/mail", mail_routes())
         .mount("/inventory", inventory_routes())
         .mount("/data", data_routes())
+        .mount("/fish_market", fishmarket_routes())
         .mount("/friend", friend_routes())
         .mount("/effects", effects_routes())
         .mount("/shop", shop_routes())

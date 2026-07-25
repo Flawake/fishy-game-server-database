@@ -14,7 +14,7 @@ pub struct RemoveExpiredEffectRequest {
 
 #[utoipa::path(
     post,
-    path = "/effects/add_active_effect",
+    path = "/effects/add_effect",
     request_body = AddActiveEffectRequest,
     responses(
         (status = 200, description = "Effect added successfully", body = bool),

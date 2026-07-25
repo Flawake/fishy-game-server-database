@@ -89,19 +89,18 @@ impl StatsRepositoryImpl {
             fish_id: Set(fish.fish_id),
             amount: Set(1),
             max_length: Set(fish.length),
-            first_caught: NotSet,
+            first_caught: Set(chrono::Utc::now().date_naive()),
         })
         .on_conflict(
             OnConflict::columns([fish_caught::Column::UserId, fish_caught::Column::FishId])
-                .update_columns([fish_caught::Column::Amount, fish_caught::Column::MaxLength])
                 .value(
                     fish_caught::Column::Amount,
-                    Expr::col(fish_caught::Column::Amount).add(1),
+                    Expr::col((fish_caught::Entity, fish_caught::Column::Amount)).add(1),
                 )
                 .value(
                     fish_caught::Column::MaxLength,
                     Func::greatest([
-                        Expr::col(fish_caught::Column::MaxLength),
+                        Expr::col((fish_caught::Entity, fish_caught::Column::MaxLength)),
                         Expr::col((Alias::new("excluded"), fish_caught::Column::MaxLength)),
                     ]),
                 )
@@ -123,9 +122,8 @@ impl StatsRepositoryImpl {
             bait_id: Set(fish.bait_id),
         })
         .on_conflict(OnConflict::new().do_nothing().to_owned())
-        .exec(tx)
+        .exec_without_returning(tx) // SeaORM handles 0 changes as an error which triggers a rollback. So just don't listen to the return
         .await?;
-
         Ok(())
     }
 
@@ -140,7 +138,7 @@ impl StatsRepositoryImpl {
             area_id: Set(fish.area_id),
         })
         .on_conflict(OnConflict::new().do_nothing().to_owned())
-        .exec(tx)
+        .exec_without_returning(tx) // SeaORM handles 0 changes as an error which triggers a rollback. So just don't listen to the return
         .await?;
         Ok(())
     }
