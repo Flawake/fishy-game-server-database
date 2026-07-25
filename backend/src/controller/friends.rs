@@ -34,12 +34,12 @@ struct HandleFriendRequest {
     path = "/friend/remove_friend",
     request_body = RemoveFriendRequests,
     responses(
-        (status = 201, description = "Successfully removed friend", body = bool),
+        (status = 200, description = "Successfully removed friend", body = bool, content_type = "application/json"),
         (status = 400, description = "Invalid input data"),
         (status = 500, description = "Internal server error")
     ),
     description = "Removes a friend from the database",
-    operation_id = "removeFriend",
+    operation_id = "remove_friend",
     tag = "Friends"
 )]
 #[post("/remove_friend", data = "<payload>")]
@@ -61,12 +61,12 @@ async fn remove_friend(
     path = "/friend/add_friend_request",
     request_body = FriendRequests,
     responses(
-        (status = 201, description = "Successfully added a friend request", body = bool),
+        (status = 200, description = "Successfully added a friend request", body = bool, content_type = "application/json"),
         (status = 400, description = "Invalid input data"),
         (status = 500, description = "Internal server error")
     ),
     description = "Adds a friend request to the database",
-    operation_id = "addFriendRequest",
+    operation_id = "add_friend_request",
     tag = "Friends"
 )]
 #[post("/add_friend_request", data = "<payload>")]
@@ -88,12 +88,12 @@ async fn add_friend_request(
     path = "/friend/handle_request",
     request_body = FriendRequests,
     responses(
-        (status = 201, description = "Successfully handled a friend request", body = bool),
+        (status = 200, description = "Successfully handled a friend request", body = bool, content_type = "application/json"),
         (status = 400, description = "Invalid input data"),
         (status = 500, description = "Internal server error")
     ),
     description = "Handles a pending friend request",
-    operation_id = "handleFriendRequest",
+    operation_id = "handle_friend_request",
     tag = "Friends"
 )]
 #[post("/handle_request", data = "<payload>")]

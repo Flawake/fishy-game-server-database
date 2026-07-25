@@ -29,13 +29,13 @@ struct BuyItemRequest {
     path = "/shop/buy_item",
     request_body = BuyItemRequest,
     responses(
-        (status = 201, description = "Item bough successfully", body = bool),
+        (status = 200, description = "Item bough successfully", body = bool, content_type = "application/json"),
         (status = 400, description = "Invalid input data"),
         (status = 500, description = "Internal server error")
     ),
     description = "Buys an item",
-    operation_id = "buyItem",
-    tag = "shop"
+    operation_id = "buy_item",
+    tag = "Shop"
 )]
 #[post("/buy_item", data = "<payload>")]
 async fn buy_item(

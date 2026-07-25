@@ -57,10 +57,12 @@ pub struct CurrentHerbQuestResponse {
     post,
     path = "/herb_quest/current_daily",
     responses(
-        (status = 200, description = "The currently active Herb quest", body = CurrentHerbQuestResponse),
+        (status = 200, description = "The currently active Herb quest", body = CurrentHerbQuestResponse, content_type = "application/json"),
         (status = 500, description = "Internal server error")
     ),
-    description = "Returns the Herb quest that is currently active. The database owns the quest; the game server polls this endpoint."
+    description = "Returns the Herb quest that is currently active. The database owns the quest; the game server polls this endpoint.",
+    operation_id = "current_daily_quest",
+    tag = "HerbQuest"
 )]
 #[post("/current_daily")]
 pub async fn current_daily_quest(
@@ -90,11 +92,13 @@ pub async fn current_daily_quest(
     path = "/herb_quest/complete_daily",
     request_body = CompleteDailyQuestRequest,
     responses(
-        (status = 200, description = "Quest handed in, fishes removed and coins rewarded", body = bool),
+        (status = 200, description = "Quest handed in, fishes removed and coins rewarded", body = bool, content_type = "application/json"),
         (status = 400, description = "Invalid request data"),
         (status = 500, description = "Internal server error")
     ),
-    description = "Hand in the Herb quest fishes. Validates against the stored quest, re-derives the reward from it, and fails when the quest is stale or already completed."
+    description = "Hand in the Herb quest fishes. Validates against the stored quest, re-derives the reward from it, and fails when the quest is stale or already completed.",
+    operation_id = "complete_daily_quest",
+    tag = "HerbQuest"
 )]
 #[post("/complete_daily", data = "<payload>")]
 pub async fn complete_daily_quest(
@@ -119,11 +123,13 @@ pub async fn complete_daily_quest(
     path = "/herb_quest/accept_daily",
     request_body = AcceptDailyQuestRequest,
     responses(
-        (status = 200, description = "Acceptance recorded", body = bool),
+        (status = 200, description = "Acceptance recorded", body = bool, content_type = "application/json"),
         (status = 400, description = "Invalid request data"),
         (status = 500, description = "Internal server error")
     ),
-    description = "Records that a player accepted (saw) the current Herb quest so the game can skip Herb's introduction next time."
+    description = "Records that a player accepted (saw) the current Herb quest so the game can skip Herb's introduction next time.",
+    operation_id = "accept_daily_quest",
+    tag = "HerbQuest"
 )]
 #[post("/accept_daily", data = "<payload>")]
 pub async fn accept_daily_quest(

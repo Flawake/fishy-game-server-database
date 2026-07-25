@@ -37,13 +37,13 @@ struct CompleteMissionRequest {
     path = "/missions/start_mission",
     request_body = StartMissionRequest,
     responses(
-        (status = 201, description = "Set successfully", body = bool),
+        (status = 200, description = "Set successfully", body = bool, content_type = "application/json"),
         (status = 400, description = "Invalid input data"),
         (status = 500, description = "Internal server error")
     ),
     description = "Starts a mission for a player",
-    operation_id = "startMission",
-    tag = "missions"
+    operation_id = "start_mission",
+    tag = "Missions"
 )]
 #[post("/start_mission", data = "<payload>")]
 async fn start_mission(
@@ -67,13 +67,13 @@ async fn start_mission(
     path = "/missions/progress_mission",
     request_body = ProgressMissionRequest,
     responses(
-        (status = 201, description = "Set successfully", body = bool),
+        (status = 200, description = "Set successfully", body = bool, content_type = "application/json"),
         (status = 400, description = "Invalid input data"),
         (status = 500, description = "Internal server error")
     ),
     description = "Sets new mission progress",
-    operation_id = "progressMission",
-    tag = "missions"
+    operation_id = "progress_mission",
+    tag = "Missions"
 )]
 #[post("/progress_mission", data = "<payload>")]
 async fn progress_mission(
@@ -97,13 +97,13 @@ async fn progress_mission(
     path = "/missions/complete_mission",
     request_body = CompleteMissionRequest,
     responses(
-        (status = 201, description = "Set successfully", body = bool),
+        (status = 200, description = "Set successfully", body = bool, content_type = "application/json"),
         (status = 400, description = "Invalid input data"),
         (status = 500, description = "Internal server error")
     ),
     description = "complete mission",
-    operation_id = "completeMission",
-    tag = "missions"
+    operation_id = "complete_mission",
+    tag = "Missions"
 )]
 #[post("/complete_mission", data = "<payload>")]
 async fn complete_mission(

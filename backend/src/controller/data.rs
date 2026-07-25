@@ -7,9 +7,9 @@ use uuid::Uuid;
 
 use crate::{domain::UserData, service::data::DataService};
 
-/// Request body for adding an item.
+/// Request body for retrieving all data belonging to a single player.
 #[derive(Debug, Serialize, Deserialize, ToSchema)]
-struct RetreiveDataRequest {
+struct RetrieveDataRequest {
     pub user_id: Uuid,
 }
 
@@ -18,23 +18,23 @@ struct RetreiveDataRequest {
 // Make sure to add your endpoint in docs.rs when you write new endpoints.
 #[utoipa::path(
     post,
-    path = "/data/retreive_all_playerdata",
-    request_body = RetreiveDataRequest,
+    path = "/data/retrieve_all_playerdata",
+    request_body = RetrieveDataRequest,
     responses(
-        (status = 201, description = "Retreived successfully", body = bool),
+        (status = 200, description = "Retrieved successfully. Null when the user has no data.", body = Option<UserData>, content_type = "application/json"),
         (status = 400, description = "Invalid input data"),
         (status = 500, description = "Internal server error")
     ),
-    description = "Retreives user data from the database",
-    operation_id = "retreiveItem",
-    tag = "userData"
+    description = "Retrieves user data from the database",
+    operation_id = "retrieve_all_playerdata",
+    tag = "UserData"
 )]
-#[post("/retreive_all_playerdata", data = "<payload>")]
-async fn retreive_player_data(
-    payload: Json<RetreiveDataRequest>,
+#[post("/retrieve_all_playerdata", data = "<payload>")]
+async fn retrieve_player_data(
+    payload: Json<RetrieveDataRequest>,
     inventory_service: &State<Arc<dyn DataService>>,
 ) -> Json<Option<UserData>> {
-    match inventory_service.retreive_all(payload.user_id).await {
+    match inventory_service.retrieve_all(payload.user_id).await {
         Ok(o) => Json(Some(o)),
         Err(_) => Json(None),
     }
@@ -42,5 +42,5 @@ async fn retreive_player_data(
 
 // Combine all the data routes.
 pub fn data_routes() -> Vec<rocket::Route> {
-    routes![retreive_player_data]
+    routes![retrieve_player_data]
 }

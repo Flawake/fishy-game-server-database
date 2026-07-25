@@ -17,10 +17,12 @@ pub struct RemoveExpiredEffectRequest {
     path = "/effects/add_effect",
     request_body = AddActiveEffectRequest,
     responses(
-        (status = 200, description = "Effect added successfully", body = bool),
+        (status = 200, description = "Effect added successfully", body = bool, content_type = "application/json"),
         (status = 400, description = "Invalid request data"),
         (status = 500, description = "Internal server error")
-    )
+    ),
+    operation_id = "add_effect",
+    tag = "Effects"
 )]
 #[post("/add_effect", data = "<add_request>")]
 pub async fn add_effect(
@@ -41,9 +43,11 @@ pub async fn add_effect(
     path = "/effects/remove_expired",
     request_body = RemoveExpiredEffectRequest,
     responses(
-        (status = 200, description = "Expired effects removed", body = bool),
+        (status = 200, description = "Expired effects removed", body = bool, content_type = "application/json"),
         (status = 500, description = "Internal server error")
-    )
+    ),
+    operation_id = "remove_expired_effects",
+    tag = "Effects"
 )]
 #[post("/remove_expired", data = "<request>")]
 pub async fn remove_expired_effects(
@@ -66,9 +70,11 @@ pub async fn remove_expired_effects(
     post,
     path = "/effects/cleanup_all_expired",
     responses(
-        (status = 200, description = "All expired effects cleaned up", body = bool),
+        (status = 200, description = "All expired effects cleaned up", body = bool, content_type = "application/json"),
         (status = 500, description = "Internal server error")
-    )
+    ),
+    operation_id = "cleanup_all_expired_effects",
+    tag = "Effects"
 )]
 #[post("/cleanup_all_expired")]
 pub async fn cleanup_all_expired_effects(

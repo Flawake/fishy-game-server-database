@@ -18,7 +18,7 @@ use uuid::Uuid;
 
 #[async_trait]
 pub trait DataRepository: Send + Sync {
-    async fn retreive_all(
+    async fn retrieve_all(
         &self,
         tx: &DatabaseTransaction,
         user_id: Uuid,
@@ -283,7 +283,7 @@ impl DataRepositoryImpl {
 
 #[async_trait]
 impl DataRepository for DataRepositoryImpl {
-    async fn retreive_all(
+    async fn retrieve_all(
         &self,
         tx: &DatabaseTransaction,
         user_id: Uuid,

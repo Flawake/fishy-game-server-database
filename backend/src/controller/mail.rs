@@ -44,12 +44,12 @@ struct ArchiveMailRequest {
     path = "/mail/create",
     request_body = CreateMailRequest,
     responses(
-        (status = 201, description = "Mail created successfully", body = bool),
+        (status = 200, description = "Mail created successfully", body = bool, content_type = "application/json"),
         (status = 400, description = "Invalid input data"),
         (status = 500, description = "Internal server error")
     ),
     description = "Creates a mail",
-    operation_id = "createMail",
+    operation_id = "create_mail",
     tag = "Mails"
 )]
 #[post("/create", data = "<payload>")]
@@ -77,12 +77,12 @@ async fn create_mail(
     path = "/mail/delete",
     request_body = DeleteMailRequest,
     responses(
-        (status = 201, description = "Mail successfully deleted", body = bool),
+        (status = 200, description = "Mail successfully deleted", body = bool, content_type = "application/json"),
         (status = 400, description = "Invalid input data"),
         (status = 500, description = "Internal server error")
     ),
     description = "Deletes a mail",
-    operation_id = "deleteMail",
+    operation_id = "delete_mail",
     tag = "Mails"
 )]
 #[post("/delete", data = "<payload>")]
@@ -101,12 +101,12 @@ async fn delete_mail(
     path = "/mail/change_read_state",
     request_body = ReadMailRequest,
     responses(
-        (status = 201, description = "Mail read state changed successfully", body = bool),
+        (status = 200, description = "Mail read state changed successfully", body = bool, content_type = "application/json"),
         (status = 400, description = "Invalid input data"),
         (status = 500, description = "Internal server error")
     ),
     description = "Changes the read state",
-    operation_id = "readStateMail",
+    operation_id = "read_mail",
     tag = "Mails"
 )]
 #[post("/change_read_state", data = "<payload>")]
@@ -128,12 +128,12 @@ async fn change_read_state(
     path = "/mail/archive_state",
     request_body = ArchiveMailRequest,
     responses(
-        (status = 201, description = "Mail archive state changed successfully", body = bool),
+        (status = 200, description = "Mail archive state changed successfully", body = bool, content_type = "application/json"),
         (status = 400, description = "Invalid input data"),
         (status = 500, description = "Internal server error")
     ),
     description = "Changes the archived state",
-    operation_id = "archiveStateMail",
+    operation_id = "archive_mail",
     tag = "Mails"
 )]
 #[post("/archive_state", data = "<payload>")]

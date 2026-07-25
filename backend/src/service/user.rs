@@ -19,7 +19,7 @@ pub trait UserService: Send + Sync {
         password: String,
     ) -> Result<LoginResponse, DbErr>;
 
-    async fn retreive_username(&self, email: String) -> Result<bool, DbErr>;
+    async fn retrieve_username(&self, email: String) -> Result<bool, DbErr>;
 
     async fn change_password(&self, name: String, new_password: String) -> Result<bool, DbErr>;
 
@@ -113,7 +113,7 @@ impl<
             })
     }
 
-    async fn retreive_username(&self, email: String) -> Result<bool, DbErr> {
+    async fn retrieve_username(&self, email: String) -> Result<bool, DbErr> {
         let user_repo = self.user_repository.clone();
         let email_cloned = email.clone();
 

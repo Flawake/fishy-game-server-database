@@ -26,7 +26,7 @@ struct ChangePasswordRequest {
 
 /// Request body for requesting a players username.
 #[derive(Debug, Serialize, Deserialize, ToSchema)]
-struct RetreiveUsernameRequest {
+struct RetrieveUsernameRequest {
     pub email: String,
 }
 
@@ -38,12 +38,12 @@ struct RetreiveUsernameRequest {
     path = "/account/register",
     request_body = CreateUserRequest,
     responses(
-        (status = 201, description = "User created successfully", body = bool),
+        (status = 200, description = "User created successfully", body = bool, content_type = "application/json"),
         (status = 400, description = "Invalid input data"),
         (status = 500, description = "Internal server error")
     ),
     description = "Creates a user. The email and username should be unique.",
-    operation_id = "createUser",
+    operation_id = "register",
     tag = "Users"
 )]
 #[post("/register", data = "<payload>")]
@@ -69,23 +69,23 @@ async fn create_user(
 
 #[utoipa::path(
     post,
-    path = "/account/retreive_username",
-    request_body = RetreiveUsernameRequest,
+    path = "/account/retrieve_username",
+    request_body = RetrieveUsernameRequest,
     responses(
-        (status = 201, description = "Username send successfull", body = bool),
+        (status = 200, description = "Username send successfull", body = bool, content_type = "application/json"),
         (status = 400, description = "Invalid input data"),
         (status = 500, description = "Internal server error")
     ),
     description = "Sends the username of the account the email belongs to to the mail address",
-    operation_id = "retreiveUsername",
+    operation_id = "retrieve_username",
     tag = "Users"
 )]
-#[post("/retreive_username", data = "<payload>")]
-async fn retreive_username(
-    payload: Json<RetreiveUsernameRequest>,
+#[post("/retrieve_username", data = "<payload>")]
+async fn retrieve_username(
+    payload: Json<RetrieveUsernameRequest>,
     user_service: &State<Arc<dyn UserService>>,
 ) -> Json<bool> {
-    match user_service.retreive_username(payload.email.clone()).await {
+    match user_service.retrieve_username(payload.email.clone()).await {
         Ok(res) => Json(res),
         Err(_) => Json(false),
     }
@@ -96,12 +96,12 @@ async fn retreive_username(
     path = "/account/change_password",
     request_body = ChangePasswordRequest,
     responses(
-        (status = 201, description = "Changed password", body = bool),
+        (status = 200, description = "Changed password", body = bool, content_type = "application/json"),
         (status = 400, description = "Invalid input data"),
         (status = 500, description = "Internal server error")
     ),
     description = "Changes a users password",
-    operation_id = "changePassword",
+    operation_id = "change_password",
     tag = "Users"
 )]
 #[post("/change_password", data = "<payload>")]
@@ -121,5 +121,5 @@ async fn change_password(
 
 // Combine all the user routes.
 pub fn user_routes() -> Vec<rocket::Route> {
-    routes![create_user, retreive_username, change_password]
+    routes![create_user, retrieve_username, change_password]
 }

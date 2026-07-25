@@ -30,12 +30,12 @@ struct DestroyItemRequest {
     path = "/inventory/destroy",
     request_body = DestroyItemRequest,
     responses(
-        (status = 201, description = "Item removed successfully", body = bool),
+        (status = 200, description = "Item removed successfully", body = bool, content_type = "application/json"),
         (status = 400, description = "Invalid input data"),
         (status = 500, description = "Internal server error")
     ),
     description = "Removes an item from the database",
-    operation_id = "destroyItem",
+    operation_id = "destroy_item",
     tag = "Inventory"
 )]
 #[post("/destroy", data = "<payload>")]
@@ -57,12 +57,12 @@ async fn destroy_item(
     path = "/inventory/addOrUpdate",
     request_body = AddOrUpdateItemRequest,
     responses(
-        (status = 201, description = "Item added/updated successfully", body = bool),
+        (status = 200, description = "Item added/updated successfully", body = bool, content_type = "application/json"),
         (status = 400, description = "Invalid input data"),
         (status = 500, description = "Internal server error")
     ),
     description = "Inserts an item in the database or updates it if it did already exist",
-    operation_id = "addOrUpdateItem",
+    operation_id = "add_or_update_item",
     tag = "Inventory"
 )]
 #[post("/add", data = "<payload>")]

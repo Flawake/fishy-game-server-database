@@ -28,10 +28,12 @@ pub struct SellFishesRequest {
     path = "/fish_market/sell_fishes",
     request_body = SellFishesRequest,
     responses(
-        (status = 200, description = "Fishes sold successfully", body = bool),
+        (status = 200, description = "Fishes sold successfully", body = bool, content_type = "application/json"),
         (status = 400, description = "Invalid request data"),
         (status = 500, description = "Internal server error")
-    )
+    ),
+    operation_id = "sell_fishes",
+    tag = "FishMarket"
 )]
 #[post("/sell_fishes", data = "<payload>")]
 pub async fn sell_fishes(

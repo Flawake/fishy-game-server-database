@@ -23,12 +23,12 @@ struct LoginRequest {
     path = "/auth/login",
     request_body = LoginRequest,
     responses(
-        (status = 201, description = "Login successful", body = LoginResponse),
+        (status = 200, description = "Login successful", body = LoginResponse, content_type = "application/json"),
         (status = 400, description = "Invalid input data"),
         (status = 500, description = "Internal server error")
     ),
     description = "Recieve a jwt when creditials are valid.",
-    operation_id = "Login",
+    operation_id = "login",
     tag = "Authentication"
 )]
 #[post("/login", data = "<payload>")]

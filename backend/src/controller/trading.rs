@@ -30,11 +30,13 @@ struct TradeRequest {
     path = "/trade/commit_trade",
     request_body = TradeRequest,
     responses(
-        (status = 201, description = "trade items commited_successfully", body = bool),
+        (status = 200, description = "trade items commited_successfully", body = bool, content_type = "application/json"),
         (status = 400, description = "invalid input data"),
         (status = 500, description = "Internal server error"),
     ),
-    description = "Remove and add traded items to the accuonts"
+    description = "Remove and add traded items to the accuonts",
+    operation_id = "commit_trade",
+    tag = "Trading"
 )]
 #[post("/commit_trade", data = "<payload>")]
 async fn commit_trade(
