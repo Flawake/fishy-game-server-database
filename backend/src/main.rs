@@ -1,5 +1,4 @@
 use crate::controller::authentication::authentication_routes;
-use crate::controller::fishmarket::fishmarket_routes;
 use crate::controller::herb_quest::herb_quest_routes;
 use crate::controller::shop::shop_routes;
 use crate::controller::stats::stats_routes;
