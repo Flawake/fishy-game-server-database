@@ -126,3 +126,15 @@ CREATE TABLE herb_quest_player_state (
     last_accepted_quest_id UUID
 );
 
+CREATE TABLE missions_completed (
+    user_id UUID NOT NULL,
+    mission_id SMALLINT NOT NULL,
+    PRIMARY KEY (user_id, mission_id)
+);
+
+CREATE TABLE missions_started (
+    user_id UUID NOT NULL,
+    mission_id SMALLINT NOT NULL,
+    mission_progress INTEGER NOT NULL,
+    PRIMARY KEY (user_id, mission_id)
+);

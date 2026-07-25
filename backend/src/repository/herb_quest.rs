@@ -105,14 +105,15 @@ impl HerbQuestRepository for HerbQuestRepositoryImpl {
         .await?;
 
         if !fishes.is_empty() {
-            let fish_models = fishes.into_iter().map(|(fish_id, amount)| {
-                herb_quest_fish::ActiveModel {
-                    quest_id: Set(quest_id),
-                    fish_id: Set(fish_id),
-                    amount: Set(amount),
-                    ..Default::default()
-                }
-            });
+            let fish_models =
+                fishes
+                    .into_iter()
+                    .map(|(fish_id, amount)| herb_quest_fish::ActiveModel {
+                        quest_id: Set(quest_id),
+                        fish_id: Set(fish_id),
+                        amount: Set(amount),
+                        ..Default::default()
+                    });
             herb_quest_fish::Entity::insert_many(fish_models)
                 .exec_without_returning(tx)
                 .await?;

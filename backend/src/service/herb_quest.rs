@@ -201,8 +201,7 @@ impl<
                     }
 
                     // Validate: every handed-in fish must be a species the quest asked for.
-                    let allowed: HashSet<i32> =
-                        quest_fishes.iter().map(|f| f.fish_id).collect();
+                    let allowed: HashSet<i32> = quest_fishes.iter().map(|f| f.fish_id).collect();
                     for fish in &fishes {
                         if !allowed.contains(&fish.fish_id) {
                             return Err(DbErr::Custom(format!(
@@ -217,14 +216,14 @@ impl<
                         if fish.fish_amount <= 0 {
                             inventory_repo.destroy(tx, user_id, fish.fish_uid).await?;
                         } else {
-                            let state_blob =
-                                fish.new_state_blob.filter(|blob| !blob.is_empty()).ok_or_else(
-                                    || {
-                                        DbErr::Custom(
-                                            "Missing state blob for a handed in fish stack".into(),
-                                        )
-                                    },
-                                )?;
+                            let state_blob = fish
+                                .new_state_blob
+                                .filter(|blob| !blob.is_empty())
+                                .ok_or_else(|| {
+                                    DbErr::Custom(
+                                        "Missing state blob for a handed in fish stack".into(),
+                                    )
+                                })?;
                             inventory_repo
                                 .add_or_update_tx(
                                     tx,

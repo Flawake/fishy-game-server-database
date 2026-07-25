@@ -6,6 +6,7 @@ use crate::controller::friends::*;
 use crate::controller::herb_quest::*;
 use crate::controller::inventory::*;
 use crate::controller::mail::*;
+use crate::controller::missions::*;
 use crate::controller::shop::*;
 use crate::controller::stats::*;
 use crate::controller::user::*;
@@ -36,5 +37,8 @@ use utoipa::OpenApi;
     current_daily_quest,
     complete_daily_quest,
     accept_daily_quest,
+    start_mission,
+    progress_mission,
+    complete_mission,
 ))]
 pub struct ApiDoc;

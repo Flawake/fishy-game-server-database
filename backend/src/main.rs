@@ -1,17 +1,21 @@
 use crate::controller::authentication::authentication_routes;
+use crate::controller::fishmarket::fishmarket_routes;
 use crate::controller::herb_quest::herb_quest_routes;
+use crate::controller::missions::mission_routes;
 use crate::controller::shop::shop_routes;
 use crate::controller::stats::stats_routes;
 use crate::controller::trading::trade_routes;
-use crate::controller::fishmarket::fishmarket_routes;
 use crate::controller::user::*;
 use crate::docs::ApiDoc;
 use crate::domain::User;
 use crate::repository::friends::FriendRepositoryImpl;
+use crate::repository::missions::MissionRepositoryImpl;
 use crate::repository::user::UserRepositoryImpl;
 use crate::service::authentication::*;
 use crate::service::fishmarket::FishmarketService;
 use crate::service::fishmarket::FishmarketServiceImpl;
+use crate::service::missions::MissionService;
+use crate::service::missions::MissionServiceImpl;
 use crate::service::shop::ShopService;
 use crate::service::shop::ShopServiceImpl;
 use crate::service::trading::TradeService;
@@ -27,8 +31,8 @@ use controller::mail::mail_routes;
 use dotenv::dotenv;
 use repository::data::DataRepositoryImpl;
 use repository::effects::EffectsRepositoryImpl;
-use repository::inventory::InventoryRepositoryImpl;
 use repository::herb_quest::HerbQuestRepositoryImpl;
+use repository::inventory::InventoryRepositoryImpl;
 use repository::mail::MailRepositoryImpl;
 use repository::stats::StatsRepositoryImpl;
 use rocket::http::Status;
@@ -47,10 +51,10 @@ use service::effects::EffectsService;
 use service::effects::EffectsServiceImpl;
 use service::friends::FriendService;
 use service::friends::FriendServiceImpl;
-use service::inventory::InventoryService;
-use service::inventory::InventoryServiceImpl;
 use service::herb_quest::HerbQuestService;
 use service::herb_quest::HerbQuestServiceImpl;
+use service::inventory::InventoryService;
+use service::inventory::InventoryServiceImpl;
 use service::mail::MailService;
 use service::mail::MailServiceImpl;
 use service::stats::StatsService;
@@ -149,6 +153,7 @@ async fn main() -> Result<(), rocket::Error> {
     let friends_repository = FriendRepositoryImpl::new();
     let stats_repository = StatsRepositoryImpl::new();
     let mail_repository = MailRepositoryImpl::new();
+    let mission_repository = MissionRepositoryImpl::new();
     let inventory_repository = InventoryRepositoryImpl::new();
     let herb_quest_repository = HerbQuestRepositoryImpl::new();
 
@@ -167,11 +172,10 @@ async fn main() -> Result<(), rocket::Error> {
     let data_service: Arc<dyn DataService> =
         Arc::new(DataServiceImpl::new(db.clone(), data_repository.clone()));
 
-    let fish_market_service: Arc<dyn FishmarketService> =
-        Arc::new(FishmarketServiceImpl::new(
+    let fish_market_service: Arc<dyn FishmarketService> = Arc::new(FishmarketServiceImpl::new(
         db.clone(),
         stats_repository.clone(),
-        inventory_repository.clone()
+        inventory_repository.clone(),
     ));
 
     let friend_service: Arc<dyn FriendService> = Arc::new(FriendServiceImpl::new(
@@ -184,6 +188,11 @@ async fn main() -> Result<(), rocket::Error> {
 
     let mail_service: Arc<dyn MailService> =
         Arc::new(MailServiceImpl::new(db.clone(), mail_repository.clone()));
+
+    let mission_service: Arc<dyn MissionService> = Arc::new(MissionServiceImpl::new(
+        db.clone(),
+        mission_repository.clone(),
+    ));
 
     let inventory_service: Arc<dyn InventoryService> = Arc::new(InventoryServiceImpl::new(
         db.clone(),
@@ -255,6 +264,7 @@ async fn main() -> Result<(), rocket::Error> {
         .manage(authentication_service)
         .manage(stats_service)
         .manage(mail_service)
+        .manage(mission_service)
         .manage(inventory_service)
         .manage(data_service)
         .manage(fish_market_service)
@@ -274,6 +284,7 @@ async fn main() -> Result<(), rocket::Error> {
         .mount("/auth", authentication_routes())
         .mount("/stats", stats_routes())
         .mount("/mail", mail_routes())
+        .mount("/missions", mission_routes())
         .mount("/inventory", inventory_routes())
         .mount("/data", data_routes())
         .mount("/fish_market", fishmarket_routes())

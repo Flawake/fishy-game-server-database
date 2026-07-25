@@ -144,5 +144,9 @@ pub async fn accept_daily_quest(
 }
 
 pub fn herb_quest_routes() -> Vec<rocket::Route> {
-    routes![current_daily_quest, complete_daily_quest, accept_daily_quest]
+    routes![
+        current_daily_quest,
+        complete_daily_quest,
+        accept_daily_quest
+    ]
 }
