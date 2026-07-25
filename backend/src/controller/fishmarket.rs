@@ -51,6 +51,6 @@ pub async fn sell_fishes(
     }
 }
 
-pub fn routes() -> Vec<rocket::Route> {
+pub fn fishmarket_routes() -> Vec<rocket::Route> {
     routes![sell_fishes,]
 }

@@ -3,6 +3,7 @@ use crate::controller::herb_quest::herb_quest_routes;
 use crate::controller::shop::shop_routes;
 use crate::controller::stats::stats_routes;
 use crate::controller::trading::trade_routes;
+use crate::controller::fishmarket::fishmarket_routes;
 use crate::controller::user::*;
 use crate::docs::ApiDoc;
 use crate::domain::User;
