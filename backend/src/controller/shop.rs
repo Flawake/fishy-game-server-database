@@ -1,10 +1,9 @@
 use rocket::{post, routes, serde::json::Json, State};
 use serde::{Deserialize, Serialize};
-use std::sync::Arc;
 use utoipa::ToSchema;
 use uuid::Uuid;
 
-use crate::service::shop::ShopService;
+use crate::state::AppState;
 
 /// Request body for buying an item.
 #[derive(Debug, Serialize, Deserialize, ToSchema, Clone, Copy)]
@@ -40,11 +39,11 @@ struct BuyItemRequest {
 #[post("/buy_item", data = "<payload>")]
 async fn buy_item(
     payload: Json<BuyItemRequest>,
-    shop_service: &State<Arc<dyn ShopService>>,
+    state: &State<AppState>,
 ) -> Json<bool> {
     let inner = payload.into_inner();
     println!("{:?}", &inner);
-    match shop_service
+    match state.shop
         .buy_item(
             inner.buyer_id,
             inner.item_def_id,

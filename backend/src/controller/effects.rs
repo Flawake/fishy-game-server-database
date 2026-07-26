@@ -1,9 +1,9 @@
-use crate::{domain::AddActiveEffectRequest, service::effects::EffectsService};
+use crate::domain::AddActiveEffectRequest;
 use rocket::{post, routes, serde::json::Json, State};
 use serde::{Deserialize, Serialize};
-use std::sync::Arc;
 use utoipa::ToSchema;
 use uuid::Uuid;
+use crate::state::AppState;
 
 /// Request body for removing expired effects for a specific user
 #[derive(Debug, Serialize, Deserialize, ToSchema)]
@@ -27,9 +27,9 @@ pub struct RemoveExpiredEffectRequest {
 #[post("/add_effect", data = "<add_request>")]
 pub async fn add_effect(
     add_request: Json<AddActiveEffectRequest>,
-    effects_service: &State<Arc<dyn EffectsService>>,
+    state: &State<AppState>,
 ) -> Json<bool> {
-    match effects_service.add_effect(add_request.into_inner()).await {
+    match state.effects.add_effect(add_request.into_inner()).await {
         Ok(_) => Json(true),
         Err(e) => {
             eprintln!("Error adding effect: {:?}", e);
@@ -52,9 +52,9 @@ pub async fn add_effect(
 #[post("/remove_expired", data = "<request>")]
 pub async fn remove_expired_effects(
     request: Json<RemoveExpiredEffectRequest>,
-    effects_service: &State<Arc<dyn EffectsService>>,
+    state: &State<AppState>,
 ) -> Json<bool> {
-    match effects_service
+    match state.effects
         .remove_effect(request.user_id, request.item_id)
         .await
     {
@@ -78,9 +78,9 @@ pub async fn remove_expired_effects(
 )]
 #[post("/cleanup_all_expired")]
 pub async fn cleanup_all_expired_effects(
-    effects_service: &State<Arc<dyn EffectsService>>,
+    state: &State<AppState>,
 ) -> Json<bool> {
-    match effects_service.cleanup_all_expired_effects().await {
+    match state.effects.cleanup_all_expired_effects().await {
         Ok(_) => Json(true),
         Err(e) => {
             eprintln!("Error cleaning up all expired effects: {:?}", e);
@@ -89,7 +89,7 @@ pub async fn cleanup_all_expired_effects(
     }
 }
 
-pub fn routes() -> Vec<rocket::Route> {
+pub fn effect_routes() -> Vec<rocket::Route> {
     routes![
         add_effect,
         remove_expired_effects,

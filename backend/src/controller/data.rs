@@ -1,11 +1,11 @@
-use std::sync::Arc;
 
 use rocket::{post, routes, serde::json::Json, State};
 use serde::{Deserialize, Serialize};
 use utoipa::ToSchema;
 use uuid::Uuid;
 
-use crate::{domain::UserData, service::data::DataService};
+use crate::domain::UserData;
+use crate::state::AppState;
 
 /// Request body for retrieving all data belonging to a single player.
 #[derive(Debug, Serialize, Deserialize, ToSchema)]
@@ -32,9 +32,9 @@ struct RetrieveDataRequest {
 #[post("/retrieve_all_playerdata", data = "<payload>")]
 async fn retrieve_player_data(
     payload: Json<RetrieveDataRequest>,
-    inventory_service: &State<Arc<dyn DataService>>,
+    state: &State<AppState>,
 ) -> Json<Option<UserData>> {
-    match inventory_service.retrieve_all(payload.user_id).await {
+    match state.data.retrieve_all(payload.user_id).await {
         Ok(o) => Json(Some(o)),
         Err(_) => Json(None),
     }

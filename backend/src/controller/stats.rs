@@ -1,12 +1,9 @@
-use crate::{
-    domain::{SelectItemRequest, StatFish},
-    service::stats::StatsService,
-};
+use crate::domain::{SelectItemRequest, StatFish};
 use rocket::{post, routes, serde::json::Json, State};
 use serde::{Deserialize, Serialize};
-use std::sync::Arc;
 use utoipa::ToSchema;
 use uuid::Uuid;
+use crate::state::AppState;
 
 /// Request body for adding playtime of a player
 #[derive(Debug, Serialize, Deserialize, ToSchema)]
@@ -42,12 +39,12 @@ struct AddFishRequest {
 #[post("/add_playtime", data = "<payload>")]
 async fn add_playtime(
     payload: Json<AddPlayTimeRequest>,
-    stats_service: &State<Arc<dyn StatsService>>,
+    state: &State<AppState>,
 ) -> Json<bool> {
     if payload.amount < 0 {
         return Json(false);
     }
-    match stats_service
+    match state.stats
         .add_playtime(payload.user_id, payload.amount)
         .await
     {
@@ -72,9 +69,9 @@ async fn add_playtime(
 #[post("/add_fish", data = "<payload>")]
 async fn add_fish(
     payload: Json<AddFishRequest>,
-    stats_service: &State<Arc<dyn StatsService>>,
+    state: &State<AppState>,
 ) -> Json<bool> {
-    match stats_service
+    match state.stats
         .add_fish(
             payload.user_id,
             StatFish {
@@ -108,9 +105,9 @@ async fn add_fish(
 #[post("/select_item", data = "<payload>")]
 async fn select_item(
     payload: Json<SelectItemRequest>,
-    stats_service: &State<Arc<dyn StatsService>>,
+    state: &State<AppState>,
 ) -> Json<bool> {
-    match stats_service
+    match state.stats
         .select_item(SelectItemRequest {
             user_id: payload.user_id,
             item_uid: payload.item_uid,

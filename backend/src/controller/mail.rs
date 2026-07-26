@@ -1,10 +1,9 @@
 use rocket::{post, routes, serde::json::Json, State};
 use serde::{Deserialize, Serialize};
-use std::sync::Arc;
 use utoipa::ToSchema;
 use uuid::Uuid;
 
-use crate::service::mail::MailService;
+use crate::state::AppState;
 
 /// Request body for creating a mail.
 #[derive(Debug, Serialize, Deserialize, ToSchema)]
@@ -55,9 +54,9 @@ struct ArchiveMailRequest {
 #[post("/create", data = "<payload>")]
 async fn create_mail(
     payload: Json<CreateMailRequest>,
-    mail_service: &State<Arc<dyn MailService>>,
+    state: &State<AppState>,
 ) -> Json<bool> {
-    match mail_service
+    match state.mail
         .create(
             payload.mail_id,
             payload.sender_id,
@@ -88,9 +87,9 @@ async fn create_mail(
 #[post("/delete", data = "<payload>")]
 async fn delete_mail(
     payload: Json<DeleteMailRequest>,
-    mail_service: &State<Arc<dyn MailService>>,
+    state: &State<AppState>,
 ) -> Json<bool> {
-    match mail_service.delete(payload.user_id, payload.mail_id).await {
+    match state.mail.delete(payload.user_id, payload.mail_id).await {
         Ok(()) => Json(true),
         Err(_) => Json(false),
     }
@@ -112,9 +111,9 @@ async fn delete_mail(
 #[post("/change_read_state", data = "<payload>")]
 async fn change_read_state(
     payload: Json<ReadMailRequest>,
-    mail_service: &State<Arc<dyn MailService>>,
+    state: &State<AppState>,
 ) -> Json<bool> {
-    match mail_service
+    match state.mail
         .change_read_state(payload.user_id, payload.mail_id, payload.read)
         .await
     {
@@ -139,9 +138,9 @@ async fn change_read_state(
 #[post("/archive_state", data = "<payload>")]
 async fn change_archive_state(
     payload: Json<ArchiveMailRequest>,
-    mail_service: &State<Arc<dyn MailService>>,
+    state: &State<AppState>,
 ) -> Json<bool> {
-    match mail_service
+    match state.mail
         .change_archive_state(payload.user_id, payload.mail_id, payload.archived)
         .await
     {

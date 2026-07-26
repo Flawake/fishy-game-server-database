@@ -1,13 +1,12 @@
 use crate::domain::LoginResponse;
-use crate::service::user::UserService;
 use rocket::post;
 use rocket::routes;
 use rocket::serde::json::Json;
 use rocket::State;
 use serde::Deserialize;
 use serde::Serialize;
-use std::sync::Arc;
 use utoipa::ToSchema;
+use crate::state::AppState;
 
 /// Request body for creating a user.
 #[derive(Debug, Serialize, Deserialize, ToSchema)]
@@ -38,7 +37,8 @@ struct RetrieveUsernameRequest {
     path = "/account/register",
     request_body = CreateUserRequest,
     responses(
-        (status = 200, description = "User created successfully", body = bool, content_type = "application/json"),
+        // create_user returns Json<LoginResponse> (code + jwt), not a bool.
+        (status = 200, description = "User created successfully", body = LoginResponse, content_type = "application/json"),
         (status = 400, description = "Invalid input data"),
         (status = 500, description = "Internal server error")
     ),
@@ -49,9 +49,9 @@ struct RetrieveUsernameRequest {
 #[post("/register", data = "<payload>")]
 async fn create_user(
     payload: Json<CreateUserRequest>,
-    user_service: &State<Arc<dyn UserService>>,
+    state: &State<AppState>,
 ) -> Json<LoginResponse> {
-    match user_service
+    match state.user
         .create(
             payload.username.clone(),
             payload.email.clone(),
@@ -83,9 +83,9 @@ async fn create_user(
 #[post("/retrieve_username", data = "<payload>")]
 async fn retrieve_username(
     payload: Json<RetrieveUsernameRequest>,
-    user_service: &State<Arc<dyn UserService>>,
+    state: &State<AppState>,
 ) -> Json<bool> {
-    match user_service.retrieve_username(payload.email.clone()).await {
+    match state.user.retrieve_username(payload.email.clone()).await {
         Ok(res) => Json(res),
         Err(_) => Json(false),
     }
@@ -107,10 +107,10 @@ async fn retrieve_username(
 #[post("/change_password", data = "<payload>")]
 async fn change_password(
     payload: Json<ChangePasswordRequest>,
-    user_service: &State<Arc<dyn UserService>>,
+    state: &State<AppState>,
 ) -> Json<bool> {
     // TODO: We need a way to verify a user is actually changing the password of it's own account
-    match user_service
+    match state.user
         .change_password(payload.username.clone(), payload.new_password.clone())
         .await
     {

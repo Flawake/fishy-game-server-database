@@ -1,11 +1,10 @@
-use std::sync::Arc;
 
 use rocket::{post, routes, serde::json::Json, State};
 use serde::{Deserialize, Serialize};
 use utoipa::ToSchema;
 use uuid::Uuid;
 
-use crate::service::herb_quest::HerbQuestService;
+use crate::state::AppState;
 
 /// A single fish stack the player hands in for the Herb quest.
 #[derive(Debug, Serialize, Deserialize, ToSchema)]
@@ -66,9 +65,9 @@ pub struct CurrentHerbQuestResponse {
 )]
 #[post("/current_daily")]
 pub async fn current_daily_quest(
-    herb_quest_service: &State<Arc<dyn HerbQuestService>>,
+    state: &State<AppState>,
 ) -> Option<Json<CurrentHerbQuestResponse>> {
-    match herb_quest_service.current_quest().await {
+    match state.herb.current_quest().await {
         Ok(quest) => Some(Json(CurrentHerbQuestResponse {
             herb_quest_id: quest.quest_id,
             area_id: quest.area_id,
@@ -103,10 +102,10 @@ pub async fn current_daily_quest(
 #[post("/complete_daily", data = "<payload>")]
 pub async fn complete_daily_quest(
     payload: Json<CompleteDailyQuestRequest>,
-    herb_quest_service: &State<Arc<dyn HerbQuestService>>,
+    state: &State<AppState>,
 ) -> Json<bool> {
     let inner = payload.into_inner();
-    match herb_quest_service
+    match state.herb
         .complete_quest(inner.user_id, inner.herb_quest_id, inner.fishes)
         .await
     {
@@ -134,10 +133,10 @@ pub async fn complete_daily_quest(
 #[post("/accept_daily", data = "<payload>")]
 pub async fn accept_daily_quest(
     payload: Json<AcceptDailyQuestRequest>,
-    herb_quest_service: &State<Arc<dyn HerbQuestService>>,
+    state: &State<AppState>,
 ) -> Json<bool> {
     let inner = payload.into_inner();
-    match herb_quest_service
+    match state.herb
         .accept_quest(inner.user_id, inner.herb_quest_id)
         .await
     {

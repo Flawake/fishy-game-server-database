@@ -1,11 +1,10 @@
-use std::sync::Arc;
 
 use rocket::{post, routes, serde::json::Json, State};
 use serde::{Deserialize, Serialize};
 use utoipa::ToSchema;
 use uuid::Uuid;
 
-use crate::service::trading::TradeService;
+use crate::state::AppState;
 
 #[derive(Debug, Serialize, Deserialize, ToSchema)]
 pub struct TradeItemRequest {
@@ -41,10 +40,10 @@ struct TradeRequest {
 #[post("/commit_trade", data = "<payload>")]
 async fn commit_trade(
     payload: Json<TradeRequest>,
-    trade_service: &State<Arc<dyn TradeService>>,
+    state: &State<AppState>,
 ) -> Json<bool> {
     let inner = payload.into_inner();
-    match trade_service
+    match state.trade
         .commit_trade(
             inner.user_one_id,
             inner.user_two_id,

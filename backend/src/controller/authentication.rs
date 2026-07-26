@@ -1,5 +1,4 @@
 use crate::domain::LoginResponse;
-use crate::service::authentication::AuthenticationService;
 use rocket::http::Status;
 use rocket::post;
 use rocket::response::status;
@@ -8,8 +7,8 @@ use rocket::serde::json::Json;
 use rocket::State;
 use serde::Deserialize;
 use serde::Serialize;
-use std::sync::Arc;
 use utoipa::ToSchema;
+use crate::state::AppState;
 
 #[derive(Debug, Serialize, Deserialize, ToSchema)]
 struct LoginRequest {
@@ -34,9 +33,9 @@ struct LoginRequest {
 #[post("/login", data = "<payload>")]
 async fn login(
     payload: Json<LoginRequest>,
-    authentication_service: &State<Arc<dyn AuthenticationService>>,
+    state: &State<AppState>,
 ) -> Result<Json<LoginResponse>, status::Custom<String>> {
-    match authentication_service
+    match state.auth
         .login(payload.username.clone(), payload.password.clone())
         .await
     {

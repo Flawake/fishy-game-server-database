@@ -1,11 +1,10 @@
-use std::sync::Arc;
 
 use rocket::{post, routes, serde::json::Json, State};
 use serde::{Deserialize, Serialize};
 use utoipa::ToSchema;
 use uuid::Uuid;
 
-use crate::service::inventory::InventoryService;
+use crate::state::AppState;
 
 #[derive(Debug, Serialize, Deserialize, ToSchema)]
 struct AddOrUpdateItemRequest {
@@ -41,9 +40,9 @@ struct DestroyItemRequest {
 #[post("/destroy", data = "<payload>")]
 async fn destroy_item(
     payload: Json<DestroyItemRequest>,
-    inventory_service: &State<Arc<dyn InventoryService>>,
+    state: &State<AppState>,
 ) -> Json<bool> {
-    match inventory_service
+    match state.inventory
         .destroy(payload.user_id, payload.item_uid)
         .await
     {
@@ -68,9 +67,9 @@ async fn destroy_item(
 #[post("/add", data = "<payload>")]
 async fn add_or_update_item(
     payload: Json<AddOrUpdateItemRequest>,
-    inventory_service: &State<Arc<dyn InventoryService>>,
+    state: &State<AppState>,
 ) -> Json<bool> {
-    match inventory_service
+    match state.inventory
         .add_or_update_item(
             payload.user_id,
             payload.item_uuid,

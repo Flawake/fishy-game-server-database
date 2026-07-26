@@ -1,11 +1,10 @@
-use std::sync::Arc;
 
 use rocket::{post, routes, serde::json::Json, State};
 use serde::{Deserialize, Serialize};
 use utoipa::ToSchema;
 use uuid::Uuid;
 
-use crate::service::fishmarket::FishmarketService;
+use crate::state::AppState;
 
 #[derive(Debug, Serialize, Deserialize, ToSchema)]
 pub struct FishToSell {
@@ -38,10 +37,10 @@ pub struct SellFishesRequest {
 #[post("/sell_fishes", data = "<payload>")]
 pub async fn sell_fishes(
     payload: Json<SellFishesRequest>,
-    fishmarket_service: &State<Arc<dyn FishmarketService>>,
+    state: &State<AppState>,
 ) -> Json<bool> {
     let inner = payload.into_inner();
-    match fishmarket_service
+    match state.fishmarket
         .sell_fishes(inner.seller_id, inner.fishes, inner.price)
         .await
     {

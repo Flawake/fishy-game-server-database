@@ -1,11 +1,10 @@
-use std::sync::Arc;
 
 use rocket::{post, routes, serde::json::Json, State};
 use serde::{Deserialize, Serialize};
 use utoipa::ToSchema;
 use uuid::Uuid;
 
-use crate::service::missions::MissionService;
+use crate::state::AppState;
 
 /// Request body for starting a new mission.
 #[derive(Debug, Serialize, Deserialize, ToSchema)]
@@ -48,9 +47,9 @@ struct CompleteMissionRequest {
 #[post("/start_mission", data = "<payload>")]
 async fn start_mission(
     payload: Json<StartMissionRequest>,
-    mission_service: &State<Arc<dyn MissionService>>,
+    state: &State<AppState>,
 ) -> Json<bool> {
-    match mission_service
+    match state.mission
         .start_mission(payload.user_id, payload.mission_id)
         .await
     {
@@ -78,9 +77,9 @@ async fn start_mission(
 #[post("/progress_mission", data = "<payload>")]
 async fn progress_mission(
     payload: Json<ProgressMissionRequest>,
-    mission_service: &State<Arc<dyn MissionService>>,
+    state: &State<AppState>,
 ) -> Json<bool> {
-    match mission_service
+    match state.mission
         .progress_mission(payload.user_id, payload.mission_id, payload.new_progress)
         .await
     {
@@ -108,9 +107,9 @@ async fn progress_mission(
 #[post("/complete_mission", data = "<payload>")]
 async fn complete_mission(
     payload: Json<CompleteMissionRequest>,
-    mission_service: &State<Arc<dyn MissionService>>,
+    state: &State<AppState>,
 ) -> Json<bool> {
-    match mission_service
+    match state.mission
         .complete_mission(payload.user_id, payload.mission_id)
         .await
     {
