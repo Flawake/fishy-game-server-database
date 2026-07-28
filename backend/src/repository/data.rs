@@ -1,9 +1,8 @@
 use crate::domain::{
-    ActiveEffect, FishData, Friend, FriendRequest, InventoryItem, MailEntry, UserData,
+    ActiveEffect, ActiveMission, FishData, Friend, FriendRequest, InventoryItem, MailEntry, UserData,
 };
 use crate::entity::{
-    fish_caught, fish_caught_area, fish_caught_bait, friend_requests, friends,
-    herb_quest_player_state, inventory_item, mail, mailbox, player_effects, stats, users,
+    fish_caught, fish_caught_area, fish_caught_bait, friend_requests, friends, herb_quest_player_state, inventory_item, mail, mailbox, missions_completed, missions_started, player_effects, stats, users,
 };
 use chrono::Utc;
 use rocket::async_trait;
@@ -279,6 +278,45 @@ impl DataRepositoryImpl {
             })
             .collect())
     }
+
+    async fn fetch_completed_missions(
+        tx: &DatabaseTransaction,
+        user_id: Uuid,
+    ) -> Result<Vec<i16>, DbErr> {
+        let rows = missions_completed::Entity::find()
+            .filter(
+                missions_completed::Column::UserId
+                    .eq(user_id),
+            )
+            .all(tx)
+            .await?;
+
+        Ok(rows
+            .into_iter()
+            .map(|e| e.mission_id)
+            .collect())
+    }
+
+    async fn fetch_active_missions(
+        tx: &DatabaseTransaction,
+        user_id: Uuid,
+    ) -> Result<Vec<ActiveMission>, DbErr> {
+        let rows = missions_started::Entity::find()
+            .filter(
+                missions_started::Column::UserId
+                    .eq(user_id),
+            )
+            .all(tx)
+            .await?;
+
+        Ok(rows
+            .into_iter()
+            .map(|e| ActiveMission {
+                mission_id: e.mission_id,
+                mission_progress: e.mission_progress,
+            })
+            .collect())
+    }
 }
 
 #[async_trait]
@@ -304,6 +342,8 @@ impl DataRepository for DataRepositoryImpl {
         let friends = Self::fetch_friends(tx, user_id).await?;
         let friend_requests = Self::fetch_friend_requests(tx, user_id).await?;
         let active_effects = Self::fetch_active_effects(tx, user_id).await?;
+        let completed_missions = Self::fetch_completed_missions(tx, user_id).await?;
+        let active_missions = Self::fetch_active_missions(tx, user_id).await?;
         let (last_completed_herb_quest_id, last_accepted_herb_quest_id) =
             Self::fetch_herb_quest_state(tx, user_id).await?;
 
@@ -321,6 +361,8 @@ impl DataRepository for DataRepositoryImpl {
             friends,
             friend_requests,
             active_effects,
+            completed_missions,
+            active_missions,
             last_completed_herb_quest_id,
             last_accepted_herb_quest_id,
         }))

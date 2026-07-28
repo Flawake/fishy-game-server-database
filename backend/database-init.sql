@@ -31,7 +31,7 @@ CREATE TABLE stats (
     xp INTEGER NOT NULL,
     coins INTEGER NOT NULL,
     bucks INTEGER NOT NULL,
-    total_playtime INTEGER NOT NULL
+    total_playtime BIGINT NOT NULL
 );
 
 CREATE TABLE fish_caught (

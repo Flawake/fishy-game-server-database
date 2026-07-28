@@ -52,7 +52,7 @@ pub struct UserData {
     pub xp: i32,
     pub coins: i32,
     pub bucks: i32,
-    pub total_playtime: i32,
+    pub total_playtime: i64,
     pub selected_rod: Option<Uuid>,
     pub selected_bait: Option<Uuid>,
     pub fish_data: Vec<FishData>,
@@ -61,6 +61,8 @@ pub struct UserData {
     pub friends: Vec<Friend>,
     pub friend_requests: Vec<FriendRequest>,
     pub active_effects: Vec<ActiveEffect>,
+    pub completed_missions: Vec<i16>,
+    pub active_missions: Vec<ActiveMission>,
     /// Id of the last Herb quest the player completed (null when never completed).
     pub last_completed_herb_quest_id: Option<Uuid>,
     /// Id of the last Herb quest the player accepted/saw (null when never accepted).
@@ -132,4 +134,10 @@ pub struct AddActiveEffectRequest {
 pub struct RemoveActiveEffectRequest {
     pub user_id: Uuid,
     pub item_id: i32,
+}
+
+#[derive(Debug, Serialize, Deserialize, ToSchema)]
+pub struct ActiveMission {
+    pub mission_id: i16,
+    pub mission_progress: i32,
 }

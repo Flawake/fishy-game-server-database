@@ -84,6 +84,8 @@ impl AppState {
         let mission: Arc<dyn MissionService> = Arc::new(MissionServiceImpl::new(
             db.clone(),
             mission_repository.clone(),
+            stats_repository.clone(),
+            inventory_repository.clone(),
         ));
 
         let inventory = Arc::new(InventoryServiceImpl::new(

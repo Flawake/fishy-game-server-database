@@ -13,7 +13,7 @@ pub struct Model {
     pub xp: i32,
     pub coins: i32,
     pub bucks: i32,
-    pub total_playtime: i32,
+    pub total_playtime: i64,
     #[sea_orm(has_many)]
     pub fish_caughts: HasMany<super::fish_caught::Entity>,
     #[sea_orm(
