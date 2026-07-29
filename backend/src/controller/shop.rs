@@ -3,7 +3,7 @@ use serde::{Deserialize, Serialize};
 use utoipa::ToSchema;
 use uuid::Uuid;
 
-use crate::state::AppState;
+use crate::{domain::InventoryItem, state::AppState};
 
 /// Request body for buying an item.
 #[derive(Debug, Serialize, Deserialize, ToSchema, Clone, Copy)]
@@ -16,9 +16,7 @@ pub enum MoneyType {
 #[derive(Debug, Serialize, Deserialize, ToSchema)]
 struct BuyItemRequest {
     pub buyer_id: Uuid,
-    pub item_def_id: i32,
-    pub item_uuid: Uuid,
-    pub item_state_blob: String,
+    pub item: InventoryItem,
     pub item_price: i32,
     pub bought_using: MoneyType,
 }
@@ -46,9 +44,7 @@ async fn buy_item(
     match state.shop
         .buy_item(
             inner.buyer_id,
-            inner.item_def_id,
-            inner.item_uuid,
-            inner.item_state_blob,
+            inner.item,
             inner.item_price,
             inner.bought_using,
         )

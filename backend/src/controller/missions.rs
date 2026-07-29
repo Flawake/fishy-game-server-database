@@ -4,7 +4,8 @@ use serde::{Deserialize, Serialize};
 use utoipa::ToSchema;
 use uuid::Uuid;
 
-use crate::service::missions::{MissionReward, MissionRewardItem};
+use crate::domain::InventoryItem;
+use crate::service::missions::MissionReward;
 use crate::state::AppState;
 
 /// Request body for starting a new mission.
@@ -39,10 +40,7 @@ struct CompleteMissionRequest {
     pub mission_id: i16,
     pub reward_coins: i32,
     pub reward_bucks: i32,
-    pub reward_item_definition_id: i32,
-    pub reward_item_uuid: Uuid,
-    /// Full state of the resulting stack, already merged by the game server.
-    pub reward_item_state_blob: String,
+    pub reward_item: Option<InventoryItem>,
 }
 
 // Utoipa is the crate that generates swagger documentation for your endpoints.
@@ -128,20 +126,16 @@ async fn complete_mission(
 ) -> Json<bool> {
     let inner = payload.into_inner();
 
-    let item = if inner.reward_item_uuid.is_nil() {
-        None
-    } else {
-        Some(MissionRewardItem {
-            uuid: inner.reward_item_uuid,
-            definition_id: inner.reward_item_definition_id,
-            state_blob: inner.reward_item_state_blob,
-        })
-    };
+    if inner.reward_item.is_some() {
+        if inner.reward_item.as_ref().unwrap().item_uuid.is_nil() {
+            return Json(false); // UUID is all zeros (unset/parsed incorrectly)
+        }
+    }
 
     let reward = MissionReward {
         coins: inner.reward_coins,
         bucks: inner.reward_bucks,
-        item,
+        item: inner.reward_item,
     };
 
     match state.mission

@@ -1,22 +1,15 @@
-use crate::repository::{
+use crate::{domain::InventoryItem, repository::{
     inventory::InventoryRepository, missions::MissionRepository, stats::StatsRepository,
-};
+}};
 use rocket::async_trait;
 use sea_orm::{DatabaseConnection, DbErr, TransactionError, TransactionTrait};
 use uuid::Uuid;
-
-/// The single inventory row a mission reward writes.
-pub struct MissionRewardItem {
-    pub uuid: Uuid,
-    pub definition_id: i32,
-    pub state_blob: String,
-}
 
 /// Everything a mission pays out on completion.
 pub struct MissionReward {
     pub coins: i32,
     pub bucks: i32,
-    pub item: Option<MissionRewardItem>,
+    pub item: Option<InventoryItem>,
 }
 
 #[async_trait]
@@ -136,12 +129,10 @@ impl<
 
                     if let Some(item) = reward.item {
                         inventory_repo
-                            .add_or_update_tx(
+                            .add_or_update_item(
                                 tx,
                                 user_id,
-                                item.uuid,
-                                item.definition_id,
-                                item.state_blob,
+                                item,
                             )
                             .await?;
                     }

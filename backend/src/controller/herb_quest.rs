@@ -11,9 +11,9 @@ use crate::state::AppState;
 pub struct HandInFish {
     pub fish_uid: Uuid,
     pub fish_id: i32,
-    /// The amount left in the stack after handing in; 0 or less destroys the stack.
-    pub fish_amount: i32,
-    pub new_state_blob: Option<String>,
+    /// How many fishes of this stack are handed in. Subtracted from the stored stack,
+    /// which is destroyed when it reaches zero. Must be positive.
+    pub amount_handed_in: i32,
 }
 
 /// Request body for handing in the current Herb quest.

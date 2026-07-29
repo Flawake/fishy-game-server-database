@@ -4,14 +4,15 @@ use serde::{Deserialize, Serialize};
 use utoipa::ToSchema;
 use uuid::Uuid;
 
-use crate::state::AppState;
+use crate::{domain::{Durability, InventoryItem, Stack}, state::AppState};
 
 #[derive(Debug, Serialize, Deserialize, ToSchema)]
 struct AddOrUpdateItemRequest {
     pub user_id: Uuid,
     pub item_uuid: Uuid,
     pub definition_id: i32,
-    pub state_blob: String,
+    pub durability: Option<Durability>,
+    pub stack: Option<Stack>,
 }
 
 /// Request body for adding an item.
@@ -69,12 +70,19 @@ async fn add_or_update_item(
     payload: Json<AddOrUpdateItemRequest>,
     state: &State<AppState>,
 ) -> Json<bool> {
+    let inner = payload.into_inner();
+
+    let item = InventoryItem {
+                item_uuid: inner.item_uuid,
+                definition_id: inner.definition_id,
+                durability: inner.durability,
+                stack: inner.stack,
+            };
+    
     match state.inventory
         .add_or_update_item(
-            payload.user_id,
-            payload.item_uuid,
-            payload.definition_id,
-            payload.state_blob.clone(),
+            inner.user_id,
+            item,
         )
         .await
     {

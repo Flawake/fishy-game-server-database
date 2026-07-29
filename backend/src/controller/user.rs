@@ -110,6 +110,9 @@ async fn change_password(
     state: &State<AppState>,
 ) -> Json<bool> {
     // TODO: We need a way to verify a user is actually changing the password of it's own account
+    // IDEA: Make an interface that can generate JWT's pr similar secret tokens with their email address.
+    // This token is then send to the provided mail address for which the token was generated, embedded in a hyperlink.
+    // Users can now open this link and the server can verify if the link is valid without caching all requests
     match state.user
         .change_password(payload.username.clone(), payload.new_password.clone())
         .await

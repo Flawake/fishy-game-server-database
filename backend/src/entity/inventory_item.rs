@@ -11,8 +11,6 @@ pub struct Model {
     #[sea_orm(primary_key, auto_increment = false, unique)]
     pub item_uuid: Uuid,
     pub definition_id: i32,
-    #[sea_orm(column_type = "Text")]
-    pub state_blob: String,
     #[sea_orm(
         belongs_to,
         from = "user_id",

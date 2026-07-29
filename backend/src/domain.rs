@@ -81,11 +81,22 @@ pub struct FishData {
     pub baits: Vec<i32>,
 }
 
+#[derive(Debug, Serialize, Deserialize, ToSchema)]
+pub struct Durability {
+    pub durability: i32,
+}
+
+#[derive(Debug, Serialize, Deserialize, ToSchema)]
+pub struct Stack {
+    pub stack: i32,
+}
+
 #[derive(Serialize, Debug, Deserialize, ToSchema)]
 pub struct InventoryItem {
     pub item_uuid: Uuid,
     pub definition_id: i32,
-    pub state_blob: String,
+    pub durability: Option<Durability>,
+    pub stack: Option<Stack>,
 }
 
 #[derive(Serialize, Debug, Deserialize, sea_orm::FromQueryResult, ToSchema)]

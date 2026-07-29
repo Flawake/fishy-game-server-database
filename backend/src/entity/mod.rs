@@ -10,6 +10,8 @@ pub mod friends;
 pub mod herb_quest;
 pub mod herb_quest_fish;
 pub mod herb_quest_player_state;
+pub mod inventory_item_durability_codec;
+pub mod inventory_item_stack_codec;
 pub mod inventory_item;
 pub mod mail;
 pub mod mailbox;

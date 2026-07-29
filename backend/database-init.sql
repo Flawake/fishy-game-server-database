@@ -59,13 +59,24 @@ CREATE TABLE fish_caught_bait (
     FOREIGN KEY (user_id, fish_id) REFERENCES fish_caught(user_id, fish_id)
 );
 
+-- Inventory item start
 CREATE TABLE inventory_item (
     user_id UUID NOT NULL REFERENCES users(user_id),
     item_uuid UUID UNIQUE,
     definition_id INTEGER NOT NULL,
-    state_blob TEXT NOT NULL,
     PRIMARY KEY (user_id, item_uuid)
 );
+
+CREATE TABLE inventory_item_stack_codec (
+    item_uuid UUID PRIMARY KEY REFERENCES inventory_item(item_uuid) ON DELETE CASCADE,
+    current_stack INT NOT NULL
+);
+
+CREATE TABLE inventory_item_durability_codec (
+    item_uuid UUID PRIMARY KEY REFERENCES inventory_item(item_uuid) ON DELETE CASCADE,
+    current_durability INT NOT NULL
+);
+-- Inventory item end
 
 CREATE TABLE mail (
     mail_id UUID PRIMARY KEY,

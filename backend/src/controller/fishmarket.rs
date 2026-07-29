@@ -4,21 +4,13 @@ use serde::{Deserialize, Serialize};
 use utoipa::ToSchema;
 use uuid::Uuid;
 
-use crate::state::AppState;
-
-#[derive(Debug, Serialize, Deserialize, ToSchema)]
-pub struct FishToSell {
-    pub fish_uid: Uuid,
-    pub fish_id: i32,
-    pub fish_amount: i32,
-    pub new_state_blob: String,
-}
+use crate::{domain::InventoryItem, state::AppState};
 
 /// Request body for selling a fish
 #[derive(Debug, Serialize, Deserialize, ToSchema)]
 pub struct SellFishesRequest {
     pub seller_id: Uuid,
-    pub fishes: Vec<FishToSell>,
+    pub fishes: Vec<InventoryItem>,
     pub price: i32,
 }
 
