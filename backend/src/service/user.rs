@@ -105,7 +105,7 @@ impl<
                         .insert_new_stats(tx, user.user_id, 25, 5000)
                         .await?;
                     inventory_repo
-                        .insert_new_inventory(
+                        .add_or_update_item(
                             tx,
                             user.user_id,
                             vec![hook_bait, bamboo_rod],

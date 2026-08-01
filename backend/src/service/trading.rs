@@ -72,21 +72,17 @@ impl<I: InventoryRepository + Clone + 'static, S: StatsRepository + Clone + 'sta
 
                     let mut tasks = FuturesUnordered::new();
 
-                    for item in user_one_receives {
-                        tasks.push(inventory_repo.add_or_update_item(
-                            tx,
-                            user_one_id,
-                            item,
-                        ));
-                    }
+                    tasks.push(inventory_repo.add_or_update_item(
+                        tx,
+                        user_one_id,
+                        user_one_receives,
+                    ));
 
-                    for item in user_two_receives {
-                        tasks.push(inventory_repo.add_or_update_item(
-                            tx,
-                            user_two_id,
-                            item,
-                        ));
-                    }
+                    tasks.push(inventory_repo.add_or_update_item(
+                        tx,
+                        user_two_id,
+                        user_two_receives,
+                    ));
 
                     while let Some(_) = tasks.next().await {}
                     Ok(())

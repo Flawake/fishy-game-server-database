@@ -16,7 +16,7 @@ pub enum MoneyType {
 #[derive(Debug, Serialize, Deserialize, ToSchema)]
 struct BuyItemRequest {
     pub buyer_id: Uuid,
-    pub item: InventoryItem,
+    pub item_updates: Vec<InventoryItem>,
     pub item_price: i32,
     pub bought_using: MoneyType,
 }
@@ -44,7 +44,7 @@ async fn buy_item(
     match state.shop
         .buy_item(
             inner.buyer_id,
-            inner.item,
+            inner.item_updates,
             inner.item_price,
             inner.bought_using,
         )

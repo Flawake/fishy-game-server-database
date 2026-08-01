@@ -132,7 +132,7 @@ impl<
                             .add_or_update_item(
                                 tx,
                                 user_id,
-                                item,
+                                vec![item],
                             )
                             .await?;
                     }

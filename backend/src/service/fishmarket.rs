@@ -48,15 +48,13 @@ impl<S: StatsRepository + Clone + 'static, I: InventoryRepository + Clone + 'sta
         self.db
             .transaction::<_, (), DbErr>(move |tx| {
                 Box::pin(async move {
-                    for fish in fishes {
                         inventory_repo
-                            .add_or_update_item(
-                                tx,
-                                seller_id,
-                                fish,
-                            )
-                            .await?;
-                    }
+                        .add_or_update_item(
+                            tx,
+                            seller_id,
+                            fishes,
+                        )
+                        .await?;
                     stats_repo
                         .change_bucks_tx(tx, seller_id, earned_money)
                         .await

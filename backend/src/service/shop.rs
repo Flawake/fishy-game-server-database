@@ -11,7 +11,7 @@ pub trait ShopService: Send + Sync {
     async fn buy_item(
         &self,
         player_id: Uuid,
-        item: InventoryItem,
+        item_updates: Vec<InventoryItem>,
         item_price: i32,
         bought_using: MoneyType,
     ) -> Result<(), DbErr>;
@@ -42,7 +42,7 @@ impl<R: StatsRepository + Clone + 'static, T: InventoryRepository + Clone + 'sta
     async fn buy_item(
         &self,
         buyer_uuid: Uuid,
-        item: InventoryItem,
+        item_updates: Vec<InventoryItem>,
         item_price: i32,
         bought_using: MoneyType,
     ) -> Result<(), DbErr> {
@@ -53,7 +53,7 @@ impl<R: StatsRepository + Clone + 'static, T: InventoryRepository + Clone + 'sta
             .transaction::<_, (), DbErr>(move |tx| {
                 Box::pin(async move {
                     inv_repo
-                        .add_or_update_item(tx, buyer_uuid, item)
+                        .add_or_update_item(tx, buyer_uuid, item_updates)
                         .await?;
 
                     match bought_using {

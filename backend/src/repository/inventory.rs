@@ -22,7 +22,7 @@ pub trait InventoryRepository: Send + Sync {
         &self,
         tx: &DatabaseTransaction,
         user_id: Uuid,
-        item: InventoryItem,
+        items: Vec<InventoryItem>,
     ) -> Result<(), DbErr>;
 
     async fn destroy(
@@ -30,13 +30,6 @@ pub trait InventoryRepository: Send + Sync {
         tx: &DatabaseTransaction,
         user_id: Uuid,
         item_uid: Uuid,
-    ) -> Result<(), DbErr>;
-
-    async fn insert_new_inventory(
-        &self,
-        tx: &DatabaseTransaction,
-        user_id: Uuid,
-        items: Vec<InventoryItem>,
     ) -> Result<(), DbErr>;
 }
 
@@ -176,20 +169,21 @@ impl InventoryRepository for InventoryRepositoryImpl {
         &self,
         tx: &DatabaseTransaction,
         user_id: Uuid,
-        item: InventoryItem,
+        items: Vec<InventoryItem>,
     ) -> Result<(), DbErr> {
-        self.add_or_update_item_definition(tx, user_id, item.item_uuid, item.definition_id).await?;
-
-        let mut depleted = false;
-        if let Some(durability) = item.durability {
-            depleted |= self.add_or_update_durability(tx, item.item_uuid, durability).await? <= 0;
-        }
-        if let Some(stack) = item.stack {
-            depleted |= self.add_or_update_stack(tx, item.item_uuid, stack).await? <= 0;
-        }
-
-        if depleted {
-            self.destroy(tx, user_id, item.item_uuid).await?;
+        for item in items {
+            self.add_or_update_item_definition(tx, user_id, item.item_uuid, item.definition_id).await?;
+            let mut depleted = false;
+            if let Some(durability) = item.durability.filter(|d| d.durability != 0) {
+                depleted |= self.add_or_update_durability(tx, item.item_uuid, durability).await? <= 0;
+            }
+            if let Some(stack) = item.stack.filter(|s| s.stack != 0) {
+                depleted |= self.add_or_update_stack(tx, item.item_uuid, stack).await? <= 0;
+            }
+        
+            if depleted {
+                self.destroy(tx, user_id, item.item_uuid).await?;
+            }
         }
 
         Ok(())
@@ -215,23 +209,6 @@ impl InventoryRepository for InventoryRepositoryImpl {
             return Err(DbErr::RecordNotUpdated);
         }
 
-        Ok(())
-    }
-
-    async fn insert_new_inventory(
-        &self,
-        tx: &DatabaseTransaction,
-        user_id: Uuid,
-        items: Vec<InventoryItem>,
-    ) -> Result<(), DbErr> {
-
-        for item in items {
-            self.add_or_update_item(
-                tx,
-                user_id,
-                item
-            ).await?;
-        }
         Ok(())
     }
 }

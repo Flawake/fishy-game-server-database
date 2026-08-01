@@ -227,14 +227,14 @@ impl<
                             .add_or_update_item(
                                 tx,
                                 user_id,
-                                InventoryItem {
+                                vec![InventoryItem {
                                     item_uuid: fish.fish_uid,
                                     definition_id: fish.fish_id,
                                     durability: None,
                                     stack: Some(Stack {
                                         stack: -fish.amount_handed_in,
                                     }),
-                                },
+                                }],
                             )
                             .await?;
                     }

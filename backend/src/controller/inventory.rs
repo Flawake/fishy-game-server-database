@@ -4,15 +4,12 @@ use serde::{Deserialize, Serialize};
 use utoipa::ToSchema;
 use uuid::Uuid;
 
-use crate::{domain::{Durability, InventoryItem, Stack}, state::AppState};
+use crate::{domain::InventoryItem, state::AppState};
 
 #[derive(Debug, Serialize, Deserialize, ToSchema)]
 struct AddOrUpdateItemRequest {
     pub user_id: Uuid,
-    pub item_uuid: Uuid,
-    pub definition_id: i32,
-    pub durability: Option<Durability>,
-    pub stack: Option<Stack>,
+    pub items: Vec<InventoryItem>
 }
 
 /// Request body for adding an item.
@@ -54,7 +51,7 @@ async fn destroy_item(
 
 #[utoipa::path(
     post,
-    path = "/inventory/addOrUpdate",
+    path = "/inventory/add_or_update",
     request_body = AddOrUpdateItemRequest,
     responses(
         (status = 200, description = "Item added/updated successfully", body = bool, content_type = "application/json"),
@@ -65,24 +62,18 @@ async fn destroy_item(
     operation_id = "add_or_update_item",
     tag = "Inventory"
 )]
-#[post("/add", data = "<payload>")]
+#[post("/add_or_update", data = "<payload>")]
 async fn add_or_update_item(
     payload: Json<AddOrUpdateItemRequest>,
     state: &State<AppState>,
 ) -> Json<bool> {
     let inner = payload.into_inner();
+    let user_id = inner.user_id;
 
-    let item = InventoryItem {
-                item_uuid: inner.item_uuid,
-                definition_id: inner.definition_id,
-                durability: inner.durability,
-                stack: inner.stack,
-            };
-    
     match state.inventory
         .add_or_update_item(
-            inner.user_id,
-            item,
+            user_id,
+            inner.items,
         )
         .await
     {
