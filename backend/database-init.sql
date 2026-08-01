@@ -31,7 +31,7 @@ CREATE TABLE stats (
     xp INTEGER NOT NULL,
     coins INTEGER NOT NULL,
     bucks INTEGER NOT NULL,
-    total_playtime INTEGER NOT NULL
+    total_playtime BIGINT NOT NULL
 );
 
 CREATE TABLE fish_caught (
@@ -59,13 +59,24 @@ CREATE TABLE fish_caught_bait (
     FOREIGN KEY (user_id, fish_id) REFERENCES fish_caught(user_id, fish_id)
 );
 
+-- Inventory item start
 CREATE TABLE inventory_item (
     user_id UUID NOT NULL REFERENCES users(user_id),
     item_uuid UUID UNIQUE,
     definition_id INTEGER NOT NULL,
-    state_blob TEXT NOT NULL,
     PRIMARY KEY (user_id, item_uuid)
 );
+
+CREATE TABLE inventory_item_stack_codec (
+    item_uuid UUID PRIMARY KEY REFERENCES inventory_item(item_uuid) ON DELETE CASCADE,
+    current_stack INT NOT NULL
+);
+
+CREATE TABLE inventory_item_durability_codec (
+    item_uuid UUID PRIMARY KEY REFERENCES inventory_item(item_uuid) ON DELETE CASCADE,
+    current_durability INT NOT NULL
+);
+-- Inventory item end
 
 CREATE TABLE mail (
     mail_id UUID PRIMARY KEY,
@@ -126,3 +137,15 @@ CREATE TABLE herb_quest_player_state (
     last_accepted_quest_id UUID
 );
 
+CREATE TABLE missions_completed (
+    user_id UUID NOT NULL,
+    mission_id SMALLINT NOT NULL,
+    PRIMARY KEY (user_id, mission_id)
+);
+
+CREATE TABLE missions_started (
+    user_id UUID NOT NULL,
+    mission_id SMALLINT NOT NULL,
+    mission_progress INTEGER NOT NULL,
+    PRIMARY KEY (user_id, mission_id)
+);

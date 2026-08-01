@@ -1,9 +1,9 @@
 use crate::domain::{
-    ActiveEffect, FishData, Friend, FriendRequest, InventoryItem, MailEntry, UserData,
+    ActiveEffect, ActiveMission, Durability, FishData, Friend, FriendRequest, InventoryItem,
+    MailEntry, Stack, UserData,
 };
 use crate::entity::{
-    fish_caught, fish_caught_area, fish_caught_bait, friend_requests, friends,
-    herb_quest_player_state, inventory_item, mail, mailbox, player_effects, stats, users,
+    fish_caught, fish_caught_area, fish_caught_bait, friend_requests, friends, herb_quest_player_state, inventory_item, inventory_item_durability_codec, inventory_item_stack_codec, mail, mailbox, missions_completed, missions_started, player_effects, stats, users,
 };
 use chrono::Utc;
 use rocket::async_trait;
@@ -18,7 +18,7 @@ use uuid::Uuid;
 
 #[async_trait]
 pub trait DataRepository: Send + Sync {
-    async fn retreive_all(
+    async fn retrieve_all(
         &self,
         tx: &DatabaseTransaction,
         user_id: Uuid,
@@ -94,17 +94,55 @@ impl DataRepositoryImpl {
         tx: &DatabaseTransaction,
         user_id: Uuid,
     ) -> Result<Vec<InventoryItem>, DbErr> {
-        let items = inventory_item::Entity::find()
+        // The durability and stack of an item live in their own codec tables and
+        // are only present for the items that actually carry that property.
+        #[derive(sea_orm::FromQueryResult)]
+        struct InventoryItemRow {
+            item_uuid: Uuid,
+            definition_id: i32,
+            current_durability: Option<i32>,
+            current_stack: Option<i32>,
+        }
+
+        let rel_durability = inventory_item::Entity::belongs_to(
+            inventory_item_durability_codec::Entity,
+        )
+        .from(inventory_item::Column::ItemUuid)
+        .to(inventory_item_durability_codec::Column::ItemUuid)
+        .into();
+
+        let rel_stack =
+            inventory_item::Entity::belongs_to(inventory_item_stack_codec::Entity)
+                .from(inventory_item::Column::ItemUuid)
+                .to(inventory_item_stack_codec::Column::ItemUuid)
+                .into();
+
+        let rows = inventory_item::Entity::find()
             .filter(inventory_item::Column::UserId.eq(user_id))
+            .join(JoinType::LeftJoin, rel_durability)
+            .join(JoinType::LeftJoin, rel_stack)
+            .select_only()
+            .column_as(inventory_item::Column::ItemUuid, "item_uuid")
+            .column_as(inventory_item::Column::DefinitionId, "definition_id")
+            .column_as(
+                inventory_item_durability_codec::Column::CurrentDurability,
+                "current_durability",
+            )
+            .column_as(
+                inventory_item_stack_codec::Column::CurrentStack,
+                "current_stack",
+            )
+            .into_model::<InventoryItemRow>()
             .all(tx)
             .await?;
 
-        Ok(items
+        Ok(rows
             .into_iter()
             .map(|i| InventoryItem {
                 item_uuid: i.item_uuid,
                 definition_id: i.definition_id,
-                state_blob: i.state_blob,
+                durability: i.current_durability.map(|durability| Durability { durability }),
+                stack: i.current_stack.map(|stack| Stack { stack }),
             })
             .collect())
     }
@@ -279,11 +317,50 @@ impl DataRepositoryImpl {
             })
             .collect())
     }
+
+    async fn fetch_completed_missions(
+        tx: &DatabaseTransaction,
+        user_id: Uuid,
+    ) -> Result<Vec<i16>, DbErr> {
+        let rows = missions_completed::Entity::find()
+            .filter(
+                missions_completed::Column::UserId
+                    .eq(user_id),
+            )
+            .all(tx)
+            .await?;
+
+        Ok(rows
+            .into_iter()
+            .map(|e| e.mission_id)
+            .collect())
+    }
+
+    async fn fetch_active_missions(
+        tx: &DatabaseTransaction,
+        user_id: Uuid,
+    ) -> Result<Vec<ActiveMission>, DbErr> {
+        let rows = missions_started::Entity::find()
+            .filter(
+                missions_started::Column::UserId
+                    .eq(user_id),
+            )
+            .all(tx)
+            .await?;
+
+        Ok(rows
+            .into_iter()
+            .map(|e| ActiveMission {
+                mission_id: e.mission_id,
+                mission_progress: e.mission_progress,
+            })
+            .collect())
+    }
 }
 
 #[async_trait]
 impl DataRepository for DataRepositoryImpl {
-    async fn retreive_all(
+    async fn retrieve_all(
         &self,
         tx: &DatabaseTransaction,
         user_id: Uuid,
@@ -304,6 +381,8 @@ impl DataRepository for DataRepositoryImpl {
         let friends = Self::fetch_friends(tx, user_id).await?;
         let friend_requests = Self::fetch_friend_requests(tx, user_id).await?;
         let active_effects = Self::fetch_active_effects(tx, user_id).await?;
+        let completed_missions = Self::fetch_completed_missions(tx, user_id).await?;
+        let active_missions = Self::fetch_active_missions(tx, user_id).await?;
         let (last_completed_herb_quest_id, last_accepted_herb_quest_id) =
             Self::fetch_herb_quest_state(tx, user_id).await?;
 
@@ -321,6 +400,8 @@ impl DataRepository for DataRepositoryImpl {
             friends,
             friend_requests,
             active_effects,
+            completed_missions,
+            active_missions,
             last_completed_herb_quest_id,
             last_accepted_herb_quest_id,
         }))

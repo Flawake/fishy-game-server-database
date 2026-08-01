@@ -66,7 +66,7 @@ impl<R: MailRepository + Clone + 'static> MailService for MailServiceImpl<R> {
             .transaction::<_, (), DbErr>(move |tx| {
                 Box::pin(async move {
                     mail_repo
-                        .create_tx(
+                        .create_mail(
                             tx,
                             mail_id,
                             sender_id,
@@ -90,7 +90,7 @@ impl<R: MailRepository + Clone + 'static> MailService for MailServiceImpl<R> {
 
         self.db
             .transaction::<_, (), DbErr>(move |tx| {
-                Box::pin(async move { mail_repo.delete_tx(tx, user_id, mail_id).await })
+                Box::pin(async move { mail_repo.delete_mail(tx, user_id, mail_id).await })
             })
             .await
             .map_err(|e| match e {

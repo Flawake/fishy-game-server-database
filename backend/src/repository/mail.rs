@@ -9,7 +9,7 @@ use uuid::Uuid;
 
 #[async_trait]
 pub trait MailRepository: Send + Sync {
-    async fn create_tx(
+    async fn create_mail(
         &self,
         tx: &DatabaseTransaction,
         mail_id: Uuid,
@@ -20,7 +20,7 @@ pub trait MailRepository: Send + Sync {
         send_time: DateTime<Utc>,
     ) -> Result<(), DbErr>;
 
-    async fn delete_tx(
+    async fn delete_mail(
         &self,
         tx: &DatabaseTransaction,
         user_id: Uuid,
@@ -130,7 +130,7 @@ impl MailRepositoryImpl {
 
 #[async_trait]
 impl MailRepository for MailRepositoryImpl {
-    async fn create_tx(
+    async fn create_mail(
         &self,
         tx: &DatabaseTransaction,
         mail_id: Uuid,
@@ -147,7 +147,7 @@ impl MailRepository for MailRepositoryImpl {
         Ok(())
     }
 
-    async fn delete_tx(
+    async fn delete_mail(
         &self,
         tx: &DatabaseTransaction,
         user_id: Uuid,

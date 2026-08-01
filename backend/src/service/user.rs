@@ -1,4 +1,4 @@
-use crate::domain::{LoginResponse, User};
+use crate::domain::{Durability, InventoryItem, LoginResponse, Stack, User};
 use crate::repository::inventory::InventoryRepository;
 use crate::repository::stats::StatsRepository;
 use crate::repository::user::{UserRepository, Username};
@@ -19,7 +19,7 @@ pub trait UserService: Send + Sync {
         password: String,
     ) -> Result<LoginResponse, DbErr>;
 
-    async fn retreive_username(&self, email: String) -> Result<bool, DbErr>;
+    async fn retrieve_username(&self, email: String) -> Result<bool, DbErr>;
 
     async fn change_password(&self, name: String, new_password: String) -> Result<bool, DbErr>;
 
@@ -83,6 +83,20 @@ impl<
         let inventory_repo = self.inventory_repository.clone();
         let secret_key = self.secret_key.clone();
 
+        let hook_bait = InventoryItem {
+            item_uuid: Uuid::new_v4(),
+            definition_id: 1000,
+            durability: Some(Durability { durability: 1 }),
+            stack: None,
+        };
+
+        let bamboo_rod = InventoryItem {
+            item_uuid: Uuid::new_v4(),
+            definition_id: 0,
+            durability: None,
+            stack: Some(Stack { stack: 1 }),
+        };
+
         self.db
             .transaction::<_, LoginResponse, DbErr>(|tx| {
                 Box::pin(async move {
@@ -91,13 +105,10 @@ impl<
                         .insert_new_stats(tx, user.user_id, 25, 5000)
                         .await?;
                     inventory_repo
-                        .insert_new_inventory(
+                        .add_or_update_item(
                             tx,
                             user.user_id,
-                            1000,
-                            String::from("AQABAAX2////"),
-                            0,
-                            String::from("AQABAAX2////"),
+                            vec![hook_bait, bamboo_rod],
                         )
                         .await?;
                     Ok(LoginResponse {
@@ -113,7 +124,7 @@ impl<
             })
     }
 
-    async fn retreive_username(&self, email: String) -> Result<bool, DbErr> {
+    async fn retrieve_username(&self, email: String) -> Result<bool, DbErr> {
         let user_repo = self.user_repository.clone();
         let email_cloned = email.clone();
 

@@ -58,8 +58,8 @@ fn is_eligible_rarity(rarity: &str) -> bool {
 fn eligible_pools() -> &'static HashMap<i32, Vec<i32>> {
     static POOLS: OnceLock<HashMap<i32, Vec<i32>>> = OnceLock::new();
     POOLS.get_or_init(|| {
-        let parsed: FishesFile = serde_json::from_str(FISHES_JSON)
-            .expect("embedded fishes.json must be valid JSON");
+        let parsed: FishesFile =
+            serde_json::from_str(FISHES_JSON).expect("embedded fishes.json must be valid JSON");
 
         let mut pools: HashMap<i32, Vec<i32>> = HashMap::new();
         for fish in parsed.fishes {

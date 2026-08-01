@@ -1,10 +1,9 @@
 use rocket::{post, routes, serde::json::Json, State};
 use serde::{Deserialize, Serialize};
-use std::sync::Arc;
 use utoipa::ToSchema;
 use uuid::Uuid;
 
-use crate::service::shop::ShopService;
+use crate::{domain::InventoryItem, state::AppState};
 
 /// Request body for buying an item.
 #[derive(Debug, Serialize, Deserialize, ToSchema, Clone, Copy)]
@@ -17,9 +16,7 @@ pub enum MoneyType {
 #[derive(Debug, Serialize, Deserialize, ToSchema)]
 struct BuyItemRequest {
     pub buyer_id: Uuid,
-    pub item_def_id: i32,
-    pub item_uuid: Uuid,
-    pub item_state_blob: String,
+    pub item_updates: Vec<InventoryItem>,
     pub item_price: i32,
     pub bought_using: MoneyType,
 }
@@ -29,27 +26,25 @@ struct BuyItemRequest {
     path = "/shop/buy_item",
     request_body = BuyItemRequest,
     responses(
-        (status = 201, description = "Item bough successfully", body = bool),
+        (status = 200, description = "Item bough successfully", body = bool, content_type = "application/json"),
         (status = 400, description = "Invalid input data"),
         (status = 500, description = "Internal server error")
     ),
     description = "Buys an item",
-    operation_id = "buyItem",
-    tag = "shop"
+    operation_id = "buy_item",
+    tag = "Shop"
 )]
 #[post("/buy_item", data = "<payload>")]
 async fn buy_item(
     payload: Json<BuyItemRequest>,
-    shop_service: &State<Arc<dyn ShopService>>,
+    state: &State<AppState>,
 ) -> Json<bool> {
     let inner = payload.into_inner();
     println!("{:?}", &inner);
-    match shop_service
+    match state.shop
         .buy_item(
             inner.buyer_id,
-            inner.item_def_id,
-            inner.item_uuid,
-            inner.item_state_blob,
+            inner.item_updates,
             inner.item_price,
             inner.bought_using,
         )

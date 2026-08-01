@@ -1,13 +1,12 @@
 use crate::domain::LoginResponse;
-use crate::service::user::UserService;
 use rocket::post;
 use rocket::routes;
 use rocket::serde::json::Json;
 use rocket::State;
 use serde::Deserialize;
 use serde::Serialize;
-use std::sync::Arc;
 use utoipa::ToSchema;
+use crate::state::AppState;
 
 /// Request body for creating a user.
 #[derive(Debug, Serialize, Deserialize, ToSchema)]
@@ -26,7 +25,7 @@ struct ChangePasswordRequest {
 
 /// Request body for requesting a players username.
 #[derive(Debug, Serialize, Deserialize, ToSchema)]
-struct RetreiveUsernameRequest {
+struct RetrieveUsernameRequest {
     pub email: String,
 }
 
@@ -38,20 +37,21 @@ struct RetreiveUsernameRequest {
     path = "/account/register",
     request_body = CreateUserRequest,
     responses(
-        (status = 201, description = "User created successfully", body = bool),
+        // create_user returns Json<LoginResponse> (code + jwt), not a bool.
+        (status = 200, description = "User created successfully", body = LoginResponse, content_type = "application/json"),
         (status = 400, description = "Invalid input data"),
         (status = 500, description = "Internal server error")
     ),
     description = "Creates a user. The email and username should be unique.",
-    operation_id = "createUser",
+    operation_id = "register",
     tag = "Users"
 )]
 #[post("/register", data = "<payload>")]
 async fn create_user(
     payload: Json<CreateUserRequest>,
-    user_service: &State<Arc<dyn UserService>>,
+    state: &State<AppState>,
 ) -> Json<LoginResponse> {
-    match user_service
+    match state.user
         .create(
             payload.username.clone(),
             payload.email.clone(),
@@ -69,23 +69,23 @@ async fn create_user(
 
 #[utoipa::path(
     post,
-    path = "/account/retreive_username",
-    request_body = RetreiveUsernameRequest,
+    path = "/account/retrieve_username",
+    request_body = RetrieveUsernameRequest,
     responses(
-        (status = 201, description = "Username send successfull", body = bool),
+        (status = 200, description = "Username send successfull", body = bool, content_type = "application/json"),
         (status = 400, description = "Invalid input data"),
         (status = 500, description = "Internal server error")
     ),
     description = "Sends the username of the account the email belongs to to the mail address",
-    operation_id = "retreiveUsername",
+    operation_id = "retrieve_username",
     tag = "Users"
 )]
-#[post("/retreive_username", data = "<payload>")]
-async fn retreive_username(
-    payload: Json<RetreiveUsernameRequest>,
-    user_service: &State<Arc<dyn UserService>>,
+#[post("/retrieve_username", data = "<payload>")]
+async fn retrieve_username(
+    payload: Json<RetrieveUsernameRequest>,
+    state: &State<AppState>,
 ) -> Json<bool> {
-    match user_service.retreive_username(payload.email.clone()).await {
+    match state.user.retrieve_username(payload.email.clone()).await {
         Ok(res) => Json(res),
         Err(_) => Json(false),
     }
@@ -96,21 +96,24 @@ async fn retreive_username(
     path = "/account/change_password",
     request_body = ChangePasswordRequest,
     responses(
-        (status = 201, description = "Changed password", body = bool),
+        (status = 200, description = "Changed password", body = bool, content_type = "application/json"),
         (status = 400, description = "Invalid input data"),
         (status = 500, description = "Internal server error")
     ),
     description = "Changes a users password",
-    operation_id = "changePassword",
+    operation_id = "change_password",
     tag = "Users"
 )]
 #[post("/change_password", data = "<payload>")]
 async fn change_password(
     payload: Json<ChangePasswordRequest>,
-    user_service: &State<Arc<dyn UserService>>,
+    state: &State<AppState>,
 ) -> Json<bool> {
     // TODO: We need a way to verify a user is actually changing the password of it's own account
-    match user_service
+    // IDEA: Make an interface that can generate JWT's pr similar secret tokens with their email address.
+    // This token is then send to the provided mail address for which the token was generated, embedded in a hyperlink.
+    // Users can now open this link and the server can verify if the link is valid without caching all requests
+    match state.user
         .change_password(payload.username.clone(), payload.new_password.clone())
         .await
     {
@@ -121,5 +124,5 @@ async fn change_password(
 
 // Combine all the user routes.
 pub fn user_routes() -> Vec<rocket::Route> {
-    routes![create_user, retreive_username, change_password]
+    routes![create_user, retrieve_username, change_password]
 }

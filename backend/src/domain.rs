@@ -45,14 +45,14 @@ pub enum ItemType {
     Extra,
 }
 
-// Struct to retreive user data
-#[derive(Serialize, Debug, Deserialize)]
+// Struct to retrieve user data
+#[derive(Serialize, Debug, Deserialize, ToSchema)]
 pub struct UserData {
     pub name: String,
     pub xp: i32,
     pub coins: i32,
     pub bucks: i32,
-    pub total_playtime: i32,
+    pub total_playtime: i64,
     pub selected_rod: Option<Uuid>,
     pub selected_bait: Option<Uuid>,
     pub fish_data: Vec<FishData>,
@@ -61,56 +61,73 @@ pub struct UserData {
     pub friends: Vec<Friend>,
     pub friend_requests: Vec<FriendRequest>,
     pub active_effects: Vec<ActiveEffect>,
+    pub completed_missions: Vec<i16>,
+    pub active_missions: Vec<ActiveMission>,
     /// Id of the last Herb quest the player completed (null when never completed).
     pub last_completed_herb_quest_id: Option<Uuid>,
     /// Id of the last Herb quest the player accepted/saw (null when never accepted).
     pub last_accepted_herb_quest_id: Option<Uuid>,
 }
 
-#[derive(Serialize, Debug, Deserialize)]
+#[derive(Serialize, Debug, Deserialize, ToSchema)]
 pub struct FishData {
     pub fish_id: i32,
     pub amount: i32,
     pub max_length: i32,
+    // utoipa is built without the `chrono` feature, so the schema type is spelled out.
+    #[schema(value_type = String, format = Date)]
     pub first_caught: chrono::NaiveDate,
     pub areas: Vec<i32>,
     pub baits: Vec<i32>,
 }
 
-#[derive(Serialize, Debug, Deserialize)]
+#[derive(Debug, Serialize, Deserialize, ToSchema)]
+pub struct Durability {
+    pub durability: i32,
+}
+
+#[derive(Debug, Serialize, Deserialize, ToSchema)]
+pub struct Stack {
+    pub stack: i32,
+}
+
+#[derive(Serialize, Debug, Deserialize, ToSchema)]
 pub struct InventoryItem {
     pub item_uuid: Uuid,
     pub definition_id: i32,
-    pub state_blob: String,
+    pub durability: Option<Durability>,
+    pub stack: Option<Stack>,
 }
 
-#[derive(Serialize, Debug, Deserialize, sea_orm::FromQueryResult)]
+#[derive(Serialize, Debug, Deserialize, sea_orm::FromQueryResult, ToSchema)]
 pub struct MailEntry {
     pub mail_id: Uuid,
     pub title: String,
     pub message: String,
+    #[schema(value_type = String, format = DateTime)]
     pub send_time: chrono::DateTime<Utc>,
     pub read: bool,
     pub archived: bool,
     pub sender_name: String,
 }
 
-#[derive(Serialize, Debug, Deserialize, sea_orm::FromQueryResult)]
+#[derive(Serialize, Debug, Deserialize, sea_orm::FromQueryResult, ToSchema)]
 pub struct Friend {
     pub friend_id: Uuid,
     pub friend_name: String,
 }
 
-#[derive(Serialize, Debug, Deserialize, sea_orm::FromQueryResult)]
+#[derive(Serialize, Debug, Deserialize, sea_orm::FromQueryResult, ToSchema)]
 pub struct FriendRequest {
     pub other_id: Uuid,
     pub other_name: String,
     pub request_sender_id: Uuid,
 }
 
-#[derive(Serialize, Debug, Deserialize, FromRow, FromQueryResult)]
+#[derive(Serialize, Debug, Deserialize, FromRow, FromQueryResult, ToSchema)]
 pub struct ActiveEffect {
     pub item_id: i32,
+    #[schema(value_type = String, format = DateTime)]
     pub expiry_time: DateTime<Utc>,
 }
 
@@ -128,4 +145,10 @@ pub struct AddActiveEffectRequest {
 pub struct RemoveActiveEffectRequest {
     pub user_id: Uuid,
     pub item_id: i32,
+}
+
+#[derive(Debug, Serialize, Deserialize, ToSchema)]
+pub struct ActiveMission {
+    pub mission_id: i16,
+    pub mission_progress: i32,
 }

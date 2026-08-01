@@ -6,7 +6,7 @@ use crate::{domain::UserData, repository::data::DataRepository};
 
 #[async_trait]
 pub trait DataService: Send + Sync {
-    async fn retreive_all(&self, user_id: Uuid) -> Result<UserData, DbErr>;
+    async fn retrieve_all(&self, user_id: Uuid) -> Result<UserData, DbErr>;
 }
 
 pub struct DataServiceImpl<U: DataRepository + Clone> {
@@ -25,13 +25,13 @@ impl<U: DataRepository + Clone> DataServiceImpl<U> {
 
 #[async_trait]
 impl<U: DataRepository + Clone + 'static> DataService for DataServiceImpl<U> {
-    async fn retreive_all(&self, user_id: Uuid) -> Result<UserData, DbErr> {
+    async fn retrieve_all(&self, user_id: Uuid) -> Result<UserData, DbErr> {
         let data_repo = self.data_repository.clone();
 
         let result = self
             .db
             .transaction::<_, Option<UserData>, DbErr>(move |tx| {
-                Box::pin(async move { data_repo.retreive_all(tx, user_id).await })
+                Box::pin(async move { data_repo.retrieve_all(tx, user_id).await })
             })
             .await
             .map_err(|e| match e {

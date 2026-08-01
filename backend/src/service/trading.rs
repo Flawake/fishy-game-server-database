@@ -1,13 +1,11 @@
 use rocket::{
-    async_trait,
-    futures::{stream::FuturesUnordered, StreamExt},
+    async_trait, futures::{StreamExt, stream::FuturesUnordered},
 };
 use sea_orm::{DatabaseConnection, DbErr, TransactionError, TransactionTrait};
 use uuid::Uuid;
 
 use crate::{
-    controller::trading::TradeItemRequest,
-    repository::{inventory::InventoryRepository, stats::StatsRepository},
+    domain::InventoryItem, repository::{inventory::InventoryRepository, stats::StatsRepository},
 };
 
 #[async_trait]
@@ -16,8 +14,8 @@ pub trait TradeService: Send + Sync {
         &self,
         user_one_id: Uuid,
         user_two_id: Uuid,
-        user_one_receives: Vec<TradeItemRequest>,
-        user_two_receives: Vec<TradeItemRequest>,
+        user_one_receives: Vec<InventoryItem>,
+        user_two_receives: Vec<InventoryItem>,
         user_one_bucks_received: i32,
         user_two_bucks_received: i32,
     ) -> Result<(), DbErr>;
@@ -49,8 +47,8 @@ impl<I: InventoryRepository + Clone + 'static, S: StatsRepository + Clone + 'sta
         &self,
         user_one_id: Uuid,
         user_two_id: Uuid,
-        user_one_receives: Vec<TradeItemRequest>,
-        user_two_receives: Vec<TradeItemRequest>,
+        user_one_receives: Vec<InventoryItem>,
+        user_two_receives: Vec<InventoryItem>,
         user_one_bucks_received: i32,
         user_two_bucks_received: i32,
     ) -> Result<(), DbErr> {
@@ -74,33 +72,17 @@ impl<I: InventoryRepository + Clone + 'static, S: StatsRepository + Clone + 'sta
 
                     let mut tasks = FuturesUnordered::new();
 
-                    for item in user_one_receives {
-                        if item.item_amount <= 0 {
-                            tasks.push(inventory_repo.destroy(tx, user_one_id, item.item_uid));
-                        } else {
-                            tasks.push(inventory_repo.add_or_update_tx(
-                                tx,
-                                user_one_id,
-                                item.item_uid,
-                                item.item_id,
-                                item.state_blob,
-                            ));
-                        }
-                    }
+                    tasks.push(inventory_repo.add_or_update_item(
+                        tx,
+                        user_one_id,
+                        user_one_receives,
+                    ));
 
-                    for item in user_two_receives {
-                        if item.item_amount <= 0 {
-                            tasks.push(inventory_repo.destroy(tx, user_two_id, item.item_uid));
-                        } else {
-                            tasks.push(inventory_repo.add_or_update_tx(
-                                tx,
-                                user_two_id,
-                                item.item_uid,
-                                item.item_id,
-                                item.state_blob,
-                            ));
-                        }
-                    }
+                    tasks.push(inventory_repo.add_or_update_item(
+                        tx,
+                        user_two_id,
+                        user_two_receives,
+                    ));
 
                     while let Some(_) = tasks.next().await {}
                     Ok(())

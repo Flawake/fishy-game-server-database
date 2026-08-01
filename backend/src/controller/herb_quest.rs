@@ -1,20 +1,19 @@
-use std::sync::Arc;
 
 use rocket::{post, routes, serde::json::Json, State};
 use serde::{Deserialize, Serialize};
 use utoipa::ToSchema;
 use uuid::Uuid;
 
-use crate::service::herb_quest::HerbQuestService;
+use crate::state::AppState;
 
 /// A single fish stack the player hands in for the Herb quest.
 #[derive(Debug, Serialize, Deserialize, ToSchema)]
 pub struct HandInFish {
     pub fish_uid: Uuid,
     pub fish_id: i32,
-    /// The amount left in the stack after handing in; 0 or less destroys the stack.
-    pub fish_amount: i32,
-    pub new_state_blob: Option<String>,
+    /// How many fishes of this stack are handed in. Subtracted from the stored stack,
+    /// which is destroyed when it reaches zero. Must be positive.
+    pub amount_handed_in: i32,
 }
 
 /// Request body for handing in the current Herb quest.
@@ -57,16 +56,18 @@ pub struct CurrentHerbQuestResponse {
     post,
     path = "/herb_quest/current_daily",
     responses(
-        (status = 200, description = "The currently active Herb quest", body = CurrentHerbQuestResponse),
+        (status = 200, description = "The currently active Herb quest", body = CurrentHerbQuestResponse, content_type = "application/json"),
         (status = 500, description = "Internal server error")
     ),
-    description = "Returns the Herb quest that is currently active. The database owns the quest; the game server polls this endpoint."
+    description = "Returns the Herb quest that is currently active. The database owns the quest; the game server polls this endpoint.",
+    operation_id = "current_daily_quest",
+    tag = "HerbQuest"
 )]
 #[post("/current_daily")]
 pub async fn current_daily_quest(
-    herb_quest_service: &State<Arc<dyn HerbQuestService>>,
+    state: &State<AppState>,
 ) -> Option<Json<CurrentHerbQuestResponse>> {
-    match herb_quest_service.current_quest().await {
+    match state.herb.current_quest().await {
         Ok(quest) => Some(Json(CurrentHerbQuestResponse {
             herb_quest_id: quest.quest_id,
             area_id: quest.area_id,
@@ -90,19 +91,21 @@ pub async fn current_daily_quest(
     path = "/herb_quest/complete_daily",
     request_body = CompleteDailyQuestRequest,
     responses(
-        (status = 200, description = "Quest handed in, fishes removed and coins rewarded", body = bool),
+        (status = 200, description = "Quest handed in, fishes removed and coins rewarded", body = bool, content_type = "application/json"),
         (status = 400, description = "Invalid request data"),
         (status = 500, description = "Internal server error")
     ),
-    description = "Hand in the Herb quest fishes. Validates against the stored quest, re-derives the reward from it, and fails when the quest is stale or already completed."
+    description = "Hand in the Herb quest fishes. Validates against the stored quest, re-derives the reward from it, and fails when the quest is stale or already completed.",
+    operation_id = "complete_daily_quest",
+    tag = "HerbQuest"
 )]
 #[post("/complete_daily", data = "<payload>")]
 pub async fn complete_daily_quest(
     payload: Json<CompleteDailyQuestRequest>,
-    herb_quest_service: &State<Arc<dyn HerbQuestService>>,
+    state: &State<AppState>,
 ) -> Json<bool> {
     let inner = payload.into_inner();
-    match herb_quest_service
+    match state.herb
         .complete_quest(inner.user_id, inner.herb_quest_id, inner.fishes)
         .await
     {
@@ -119,19 +122,21 @@ pub async fn complete_daily_quest(
     path = "/herb_quest/accept_daily",
     request_body = AcceptDailyQuestRequest,
     responses(
-        (status = 200, description = "Acceptance recorded", body = bool),
+        (status = 200, description = "Acceptance recorded", body = bool, content_type = "application/json"),
         (status = 400, description = "Invalid request data"),
         (status = 500, description = "Internal server error")
     ),
-    description = "Records that a player accepted (saw) the current Herb quest so the game can skip Herb's introduction next time."
+    description = "Records that a player accepted (saw) the current Herb quest so the game can skip Herb's introduction next time.",
+    operation_id = "accept_daily_quest",
+    tag = "HerbQuest"
 )]
 #[post("/accept_daily", data = "<payload>")]
 pub async fn accept_daily_quest(
     payload: Json<AcceptDailyQuestRequest>,
-    herb_quest_service: &State<Arc<dyn HerbQuestService>>,
+    state: &State<AppState>,
 ) -> Json<bool> {
     let inner = payload.into_inner();
-    match herb_quest_service
+    match state.herb
         .accept_quest(inner.user_id, inner.herb_quest_id)
         .await
     {
@@ -144,5 +149,9 @@ pub async fn accept_daily_quest(
 }
 
 pub fn herb_quest_routes() -> Vec<rocket::Route> {
-    routes![current_daily_quest, complete_daily_quest, accept_daily_quest]
+    routes![
+        current_daily_quest,
+        complete_daily_quest,
+        accept_daily_quest
+    ]
 }

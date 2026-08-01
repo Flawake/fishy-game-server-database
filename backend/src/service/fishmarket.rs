@@ -3,8 +3,7 @@ use sea_orm::{DatabaseConnection, DbErr, TransactionError, TransactionTrait};
 use uuid::Uuid;
 
 use crate::{
-    controller::fishmarket::FishToSell,
-    repository::{inventory::InventoryRepository, stats::StatsRepository},
+    domain::InventoryItem, repository::{inventory::InventoryRepository, stats::StatsRepository},
 };
 
 // Here you add your business logic here.
@@ -13,7 +12,7 @@ pub trait FishmarketService: Send + Sync {
     async fn sell_fishes(
         &self,
         seller_id: Uuid,
-        fishes: Vec<FishToSell>,
+        fishes: Vec<InventoryItem>,
         earned_money: i32,
     ) -> Result<(), DbErr>;
 }
@@ -41,7 +40,7 @@ impl<S: StatsRepository + Clone + 'static, I: InventoryRepository + Clone + 'sta
     async fn sell_fishes(
         &self,
         seller_id: Uuid,
-        fishes: Vec<FishToSell>,
+        fishes: Vec<InventoryItem>,
         earned_money: i32,
     ) -> Result<(), DbErr> {
         let inventory_repo = self.inventory_repository.clone();
@@ -49,21 +48,13 @@ impl<S: StatsRepository + Clone + 'static, I: InventoryRepository + Clone + 'sta
         self.db
             .transaction::<_, (), DbErr>(move |tx| {
                 Box::pin(async move {
-                    for fish in fishes {
-                        if fish.fish_amount <= 0 {
-                            inventory_repo.destroy(tx, seller_id, fish.fish_uid).await?;
-                        } else {
-                            inventory_repo
-                                .add_or_update_tx(
-                                    tx,
-                                    seller_id,
-                                    fish.fish_uid,
-                                    fish.fish_id,
-                                    fish.new_state_blob,
-                                )
-                                .await?;
-                        }
-                    }
+                        inventory_repo
+                        .add_or_update_item(
+                            tx,
+                            seller_id,
+                            fishes,
+                        )
+                        .await?;
                     stats_repo
                         .change_bucks_tx(tx, seller_id, earned_money)
                         .await

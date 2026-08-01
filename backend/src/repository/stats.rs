@@ -6,7 +6,7 @@ use rocket::async_trait;
 use sea_orm::{
     prelude::Expr,
     sea_query::{Alias, Func, OnConflict},
-    ActiveValue::{NotSet, Set},
+    ActiveValue::Set,
     ColumnTrait, DatabaseTransaction, DbErr, EntityTrait, ExprTrait, QueryFilter,
 };
 use uuid::Uuid;

@@ -1,26 +1,17 @@
-use std::sync::Arc;
 
 use rocket::{post, routes, serde::json::Json, State};
 use serde::{Deserialize, Serialize};
 use utoipa::ToSchema;
 use uuid::Uuid;
 
-use crate::service::trading::TradeService;
-
-#[derive(Debug, Serialize, Deserialize, ToSchema)]
-pub struct TradeItemRequest {
-    pub item_uid: Uuid,
-    pub item_id: i32,
-    pub item_amount: i32,
-    pub state_blob: String,
-}
+use crate::{domain::InventoryItem, state::AppState};
 
 #[derive(Debug, Serialize, Deserialize, ToSchema)]
 struct TradeRequest {
     pub user_one_id: Uuid,
     pub user_two_id: Uuid,
-    pub user_one_receives: Vec<TradeItemRequest>,
-    pub user_two_receives: Vec<TradeItemRequest>,
+    pub user_one_receives: Vec<InventoryItem>,
+    pub user_two_receives: Vec<InventoryItem>,
     pub user_one_bucks_received: i32,
     pub user_two_bucks_received: i32,
 }
@@ -30,19 +21,21 @@ struct TradeRequest {
     path = "/trade/commit_trade",
     request_body = TradeRequest,
     responses(
-        (status = 201, description = "trade items commited_successfully", body = bool),
+        (status = 200, description = "trade items commited_successfully", body = bool, content_type = "application/json"),
         (status = 400, description = "invalid input data"),
         (status = 500, description = "Internal server error"),
     ),
-    description = "Remove and add traded items to the accuonts"
+    description = "Remove and add traded items to the accuonts",
+    operation_id = "commit_trade",
+    tag = "Trading"
 )]
 #[post("/commit_trade", data = "<payload>")]
 async fn commit_trade(
     payload: Json<TradeRequest>,
-    trade_service: &State<Arc<dyn TradeService>>,
+    state: &State<AppState>,
 ) -> Json<bool> {
     let inner = payload.into_inner();
-    match trade_service
+    match state.trade
         .commit_trade(
             inner.user_one_id,
             inner.user_two_id,

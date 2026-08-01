@@ -1,12 +1,9 @@
-use crate::{
-    domain::{SelectItemRequest, StatFish},
-    service::stats::StatsService,
-};
+use crate::domain::{SelectItemRequest, StatFish};
 use rocket::{post, routes, serde::json::Json, State};
 use serde::{Deserialize, Serialize};
-use std::sync::Arc;
 use utoipa::ToSchema;
 use uuid::Uuid;
+use crate::state::AppState;
 
 /// Request body for adding playtime of a player
 #[derive(Debug, Serialize, Deserialize, ToSchema)]
@@ -31,23 +28,23 @@ struct AddFishRequest {
     path = "/stats/add_playtime",
     request_body = AddPlayTimeRequest,
     responses(
-        (status = 201, description = "playtime changed successfully", body = bool),
+        (status = 200, description = "playtime changed successfully", body = bool, content_type = "application/json"),
         (status = 400, description = "Invalid input data"),
         (status = 500, description = "Internal server error")
     ),
     description = "Adds more playtime to a given user account",
-    operation_id = "changePlayetime",
+    operation_id = "add_playtime",
     tag = "Stats"
 )]
 #[post("/add_playtime", data = "<payload>")]
 async fn add_playtime(
     payload: Json<AddPlayTimeRequest>,
-    stats_service: &State<Arc<dyn StatsService>>,
+    state: &State<AppState>,
 ) -> Json<bool> {
     if payload.amount < 0 {
         return Json(false);
     }
-    match stats_service
+    match state.stats
         .add_playtime(payload.user_id, payload.amount)
         .await
     {
@@ -61,20 +58,20 @@ async fn add_playtime(
     path = "/stats/add_fish",
     request_body = AddFishRequest,
     responses(
-        (status = 201, description = "stat fish added successfully", body = bool),
+        (status = 200, description = "stat fish added successfully", body = bool, content_type = "application/json"),
         (status = 400, description = "Invalid input data"),
         (status = 500, description = "Internal server error")
     ),
     description = "Adds a stat fish to a given user account",
-    operation_id = "changePlayetime",
+    operation_id = "add_fish",
     tag = "Stats"
 )]
 #[post("/add_fish", data = "<payload>")]
 async fn add_fish(
     payload: Json<AddFishRequest>,
-    stats_service: &State<Arc<dyn StatsService>>,
+    state: &State<AppState>,
 ) -> Json<bool> {
-    match stats_service
+    match state.stats
         .add_fish(
             payload.user_id,
             StatFish {
@@ -97,20 +94,20 @@ async fn add_fish(
     path = "/stats/select_item",
     request_body = SelectItemRequest,
     responses(
-        (status = 201, description = "Successfully selected an item", body = bool),
+        (status = 200, description = "Successfully selected an item", body = bool, content_type = "application/json"),
         (status = 400, description = "Invalid input data"),
         (status = 500, description = "Internal server error")
     ),
     description = "Select an item",
-    operation_id = "selectItem",
+    operation_id = "select_item",
     tag = "Stats"
 )]
 #[post("/select_item", data = "<payload>")]
 async fn select_item(
     payload: Json<SelectItemRequest>,
-    stats_service: &State<Arc<dyn StatsService>>,
+    state: &State<AppState>,
 ) -> Json<bool> {
-    match stats_service
+    match state.stats
         .select_item(SelectItemRequest {
             user_id: payload.user_id,
             item_uid: payload.item_uid,

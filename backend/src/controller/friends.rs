@@ -1,11 +1,10 @@
-use std::sync::Arc;
 
 use rocket::{post, routes, serde::json::Json, State};
 use serde::{Deserialize, Serialize};
 use utoipa::ToSchema;
 use uuid::Uuid;
 
-use crate::service::friends::FriendService;
+use crate::state::AppState;
 
 /// Request body for adding a friend.
 #[derive(Debug, Serialize, Deserialize, ToSchema)]
@@ -17,7 +16,7 @@ struct FriendRequests {
 
 /// Request body for removing a friend.
 #[derive(Debug, Serialize, Deserialize, ToSchema)]
-struct RemoveFriendRequests {
+struct RemoveFriend {
     pub user_one: Uuid,
     pub user_two: Uuid,
 }
@@ -32,22 +31,22 @@ struct HandleFriendRequest {
 #[utoipa::path(
     post,
     path = "/friend/remove_friend",
-    request_body = RemoveFriendRequests,
+    request_body = RemoveFriend,
     responses(
-        (status = 201, description = "Successfully removed friend", body = bool),
+        (status = 200, description = "Successfully removed friend", body = bool, content_type = "application/json"),
         (status = 400, description = "Invalid input data"),
         (status = 500, description = "Internal server error")
     ),
     description = "Removes a friend from the database",
-    operation_id = "removeFriend",
+    operation_id = "remove_friend",
     tag = "Friends"
 )]
 #[post("/remove_friend", data = "<payload>")]
 async fn remove_friend(
-    payload: Json<RemoveFriendRequests>,
-    friends_service: &State<Arc<dyn FriendService>>,
+    payload: Json<RemoveFriend>,
+    state: &State<AppState>,
 ) -> Json<bool> {
-    match friends_service
+    match state.friend
         .remove_friend(payload.user_one, payload.user_two)
         .await
     {
@@ -61,20 +60,20 @@ async fn remove_friend(
     path = "/friend/add_friend_request",
     request_body = FriendRequests,
     responses(
-        (status = 201, description = "Successfully added a friend request", body = bool),
+        (status = 200, description = "Successfully added a friend request", body = bool, content_type = "application/json"),
         (status = 400, description = "Invalid input data"),
         (status = 500, description = "Internal server error")
     ),
     description = "Adds a friend request to the database",
-    operation_id = "addFriendRequest",
+    operation_id = "add_friend_request",
     tag = "Friends"
 )]
 #[post("/add_friend_request", data = "<payload>")]
 async fn add_friend_request(
     payload: Json<FriendRequests>,
-    friends_service: &State<Arc<dyn FriendService>>,
+    state: &State<AppState>,
 ) -> Json<bool> {
-    match friends_service
+    match state.friend
         .add_friend_request(payload.user_one, payload.user_two, payload.sender_id)
         .await
     {
@@ -86,22 +85,22 @@ async fn add_friend_request(
 #[utoipa::path(
     post,
     path = "/friend/handle_request",
-    request_body = FriendRequests,
+    request_body = HandleFriendRequest,
     responses(
-        (status = 201, description = "Successfully handled a friend request", body = bool),
+        (status = 200, description = "Successfully handled a friend request", body = bool, content_type = "application/json"),
         (status = 400, description = "Invalid input data"),
         (status = 500, description = "Internal server error")
     ),
     description = "Handles a pending friend request",
-    operation_id = "handleFriendRequest",
+    operation_id = "handle_friend_request",
     tag = "Friends"
 )]
 #[post("/handle_request", data = "<payload>")]
 async fn handle_friend_request(
     payload: Json<HandleFriendRequest>,
-    friends_service: &State<Arc<dyn FriendService>>,
+    state: &State<AppState>,
 ) -> Json<bool> {
-    match friends_service
+    match state.friend
         .handle_friend_request(payload.user_one, payload.user_two, payload.request_accepted)
         .await
     {

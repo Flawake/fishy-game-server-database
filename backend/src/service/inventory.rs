@@ -2,7 +2,7 @@ use rocket::async_trait;
 use sea_orm::{DatabaseConnection, DbErr, TransactionError, TransactionTrait};
 use uuid::Uuid;
 
-use crate::repository::inventory::InventoryRepository;
+use crate::{domain::InventoryItem, repository::inventory::InventoryRepository};
 
 // Here you add your business logic here.
 #[async_trait]
@@ -10,9 +10,7 @@ pub trait InventoryService: Send + Sync {
     async fn add_or_update_item(
         &self,
         user_uuid: Uuid,
-        item_uuid: Uuid,
-        item_def_id: i32,
-        state_blob: String,
+        item: Vec<InventoryItem>,
     ) -> Result<(), DbErr>;
 
     async fn destroy(&self, user_id: Uuid, item_uid: Uuid) -> Result<(), DbErr>;
@@ -39,9 +37,7 @@ impl<R: InventoryRepository + Clone + 'static> InventoryService for InventorySer
     async fn add_or_update_item(
         &self,
         user_uuid: Uuid,
-        item_uuid: Uuid,
-        item_def_id: i32,
-        state_blob: String,
+        items: Vec<InventoryItem>,
     ) -> Result<(), DbErr> {
         let inv_repo = self.inventory_repository.clone();
 
@@ -49,7 +45,7 @@ impl<R: InventoryRepository + Clone + 'static> InventoryService for InventorySer
             .transaction::<_, (), DbErr>(move |tx| {
                 Box::pin(async move {
                     inv_repo
-                        .add_or_update_tx(tx, user_uuid, item_uuid, item_def_id, state_blob)
+                        .add_or_update_item(tx, user_uuid, items)
                         .await?;
 
                     Ok(())

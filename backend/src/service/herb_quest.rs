@@ -7,6 +7,7 @@ use uuid::Uuid;
 
 use crate::{
     controller::herb_quest::HandInFish,
+    domain::{InventoryItem, Stack},
     fish_catalog,
     repository::{
         herb_quest::HerbQuestRepository, inventory::InventoryRepository, stats::StatsRepository,
@@ -200,9 +201,10 @@ impl<
                         }
                     }
 
-                    // Validate: every handed-in fish must be a species the quest asked for.
-                    let allowed: HashSet<i32> =
-                        quest_fishes.iter().map(|f| f.fish_id).collect();
+                    // Validate: every handed-in fish must be a species the quest asked for,
+                    // and the amount must be positive. A non-positive amount would be applied
+                    // as a stack increase, so it can never be accepted here.
+                    let allowed: HashSet<i32> = quest_fishes.iter().map(|f| f.fish_id).collect();
                     for fish in &fishes {
                         if !allowed.contains(&fish.fish_id) {
                             return Err(DbErr::Custom(format!(
@@ -210,31 +212,31 @@ impl<
                                 fish.fish_id
                             )));
                         }
+                        if fish.amount_handed_in <= 0 {
+                            return Err(DbErr::Custom(format!(
+                                "Handed in amount for fish {} must be positive",
+                                fish.fish_id
+                            )));
+                        }
                     }
 
-                    // Apply the inventory changes the (trusted) game server computed.
+                    // Take the handed-in fishes out of the inventory. The stack is relative,
+                    // so the stack is destroyed once it runs out.
                     for fish in fishes {
-                        if fish.fish_amount <= 0 {
-                            inventory_repo.destroy(tx, user_id, fish.fish_uid).await?;
-                        } else {
-                            let state_blob =
-                                fish.new_state_blob.filter(|blob| !blob.is_empty()).ok_or_else(
-                                    || {
-                                        DbErr::Custom(
-                                            "Missing state blob for a handed in fish stack".into(),
-                                        )
-                                    },
-                                )?;
-                            inventory_repo
-                                .add_or_update_tx(
-                                    tx,
-                                    user_id,
-                                    fish.fish_uid,
-                                    fish.fish_id,
-                                    state_blob,
-                                )
-                                .await?;
-                        }
+                        inventory_repo
+                            .add_or_update_item(
+                                tx,
+                                user_id,
+                                vec![InventoryItem {
+                                    item_uuid: fish.fish_uid,
+                                    definition_id: fish.fish_id,
+                                    durability: None,
+                                    stack: Some(Stack {
+                                        stack: -fish.amount_handed_in,
+                                    }),
+                                }],
+                            )
+                            .await?;
                     }
 
                     // Reward comes from the stored quest, never from the client-sent value.

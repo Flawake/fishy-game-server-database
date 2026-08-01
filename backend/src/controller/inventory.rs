@@ -1,18 +1,15 @@
-use std::sync::Arc;
 
 use rocket::{post, routes, serde::json::Json, State};
 use serde::{Deserialize, Serialize};
 use utoipa::ToSchema;
 use uuid::Uuid;
 
-use crate::service::inventory::InventoryService;
+use crate::{domain::InventoryItem, state::AppState};
 
 #[derive(Debug, Serialize, Deserialize, ToSchema)]
 struct AddOrUpdateItemRequest {
     pub user_id: Uuid,
-    pub item_uuid: Uuid,
-    pub definition_id: i32,
-    pub state_blob: String,
+    pub items: Vec<InventoryItem>
 }
 
 /// Request body for adding an item.
@@ -30,20 +27,20 @@ struct DestroyItemRequest {
     path = "/inventory/destroy",
     request_body = DestroyItemRequest,
     responses(
-        (status = 201, description = "Item removed successfully", body = bool),
+        (status = 200, description = "Item removed successfully", body = bool, content_type = "application/json"),
         (status = 400, description = "Invalid input data"),
         (status = 500, description = "Internal server error")
     ),
     description = "Removes an item from the database",
-    operation_id = "destroyItem",
+    operation_id = "destroy_item",
     tag = "Inventory"
 )]
 #[post("/destroy", data = "<payload>")]
 async fn destroy_item(
     payload: Json<DestroyItemRequest>,
-    inventory_service: &State<Arc<dyn InventoryService>>,
+    state: &State<AppState>,
 ) -> Json<bool> {
-    match inventory_service
+    match state.inventory
         .destroy(payload.user_id, payload.item_uid)
         .await
     {
@@ -54,28 +51,29 @@ async fn destroy_item(
 
 #[utoipa::path(
     post,
-    path = "/inventory/addOrUpdate",
+    path = "/inventory/add_or_update",
     request_body = AddOrUpdateItemRequest,
     responses(
-        (status = 201, description = "Item added/updated successfully", body = bool),
+        (status = 200, description = "Item added/updated successfully", body = bool, content_type = "application/json"),
         (status = 400, description = "Invalid input data"),
         (status = 500, description = "Internal server error")
     ),
     description = "Inserts an item in the database or updates it if it did already exist",
-    operation_id = "addOrUpdateItem",
+    operation_id = "add_or_update_item",
     tag = "Inventory"
 )]
-#[post("/add", data = "<payload>")]
+#[post("/add_or_update", data = "<payload>")]
 async fn add_or_update_item(
     payload: Json<AddOrUpdateItemRequest>,
-    inventory_service: &State<Arc<dyn InventoryService>>,
+    state: &State<AppState>,
 ) -> Json<bool> {
-    match inventory_service
+    let inner = payload.into_inner();
+    let user_id = inner.user_id;
+
+    match state.inventory
         .add_or_update_item(
-            payload.user_id,
-            payload.item_uuid,
-            payload.definition_id,
-            payload.state_blob.clone(),
+            user_id,
+            inner.items,
         )
         .await
     {

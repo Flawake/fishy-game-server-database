@@ -1,25 +1,16 @@
-use std::sync::Arc;
 
 use rocket::{post, routes, serde::json::Json, State};
 use serde::{Deserialize, Serialize};
 use utoipa::ToSchema;
 use uuid::Uuid;
 
-use crate::service::fishmarket::FishmarketService;
-
-#[derive(Debug, Serialize, Deserialize, ToSchema)]
-pub struct FishToSell {
-    pub fish_uid: Uuid,
-    pub fish_id: i32,
-    pub fish_amount: i32,
-    pub new_state_blob: String,
-}
+use crate::{domain::InventoryItem, state::AppState};
 
 /// Request body for selling a fish
 #[derive(Debug, Serialize, Deserialize, ToSchema)]
 pub struct SellFishesRequest {
     pub seller_id: Uuid,
-    pub fishes: Vec<FishToSell>,
+    pub fishes: Vec<InventoryItem>,
     pub price: i32,
 }
 
@@ -28,18 +19,20 @@ pub struct SellFishesRequest {
     path = "/fish_market/sell_fishes",
     request_body = SellFishesRequest,
     responses(
-        (status = 200, description = "Fishes sold successfully", body = bool),
+        (status = 200, description = "Fishes sold successfully", body = bool, content_type = "application/json"),
         (status = 400, description = "Invalid request data"),
         (status = 500, description = "Internal server error")
-    )
+    ),
+    operation_id = "sell_fishes",
+    tag = "FishMarket"
 )]
 #[post("/sell_fishes", data = "<payload>")]
 pub async fn sell_fishes(
     payload: Json<SellFishesRequest>,
-    fishmarket_service: &State<Arc<dyn FishmarketService>>,
+    state: &State<AppState>,
 ) -> Json<bool> {
     let inner = payload.into_inner();
-    match fishmarket_service
+    match state.fishmarket
         .sell_fishes(inner.seller_id, inner.fishes, inner.price)
         .await
     {
@@ -51,6 +44,6 @@ pub async fn sell_fishes(
     }
 }
 
-pub fn routes() -> Vec<rocket::Route> {
+pub fn fishmarket_routes() -> Vec<rocket::Route> {
     routes![sell_fishes,]
 }
